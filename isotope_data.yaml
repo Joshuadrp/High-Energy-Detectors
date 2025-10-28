@@ -1,0 +1,49 @@
+Isotope: Co-60
+Decay Mode: B- 
+Half-life: 5.2714 years
+Energy (keV):
+  - 1173.228
+  - 1332.492
+Emission fraction:
+  - 0.9985
+  - 0.999826
+
+Isotope: Ba-133
+Decay Mode: EC
+Half-life: 10.537 years
+Energy (keV):
+  - 53.1622
+  - 79.6142
+  - 80.9979
+  - 276.3989
+  - 302.8505
+  - 356.0129
+  - 383.8485
+Emission fraction:
+  - 0.0214
+  - 0.0265
+  - 0.329
+  - 0.0716
+  - 0.1834
+  - 0.6205
+  - 0.0894
+
+Isotope: Cs-137
+Decay mode: B-
+Half-life: 30.09
+Energy (keV):
+  - 661.657
+Emission fraction:
+  - 0.8499
+
+Isotope: Am-241
+Decay Mode: Alpha
+Half-life: 432.2
+Energy (keV):
+  - 26.3446
+  - 33.1963
+  - 59.5409
+Emission fraction:
+  - 0.024
+  - 0.00121
+  - 0.3578
