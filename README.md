@@ -15,10 +15,10 @@ This laboratory involves calibrating and characterizing space radiation detector
 
 ### 1. Energy Calibration
 
-- Write code to calibrate each detector, relating the digital channel number to absolute energy:  
-  $$
-  E = c_1 \times \text{channel} + c_0
-  $$
+- Write code to calibrate each detector, relating the digital channel number to absolute energy:
+$$
+E = c_1 \times \text{channel} + c_0
+$$
 - Test the linearity of this calibration curve and, if needed, fit higher-order terms.
 
 ### 2. Source Activity
