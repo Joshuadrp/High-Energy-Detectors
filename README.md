@@ -16,9 +16,11 @@ This laboratory involves calibrating and characterizing space radiation detector
 ### 1. Energy Calibration
 
 - Write code to calibrate each detector, relating the digital channel number to absolute energy:
+
 $$
 E = c_1 \times \text{channel} + c_0
 $$
+
 - Test the linearity of this calibration curve and, if needed, fit higher-order terms.
 
 ### 2. Source Activity
@@ -28,28 +30,37 @@ $$
 
 ### 3. Energy Resolution
 
-- Calculate the energy resolution $$ R $$ at each energy:
+  - Calculate the energy resolution R at each energy:
+
   $$
   R = \frac{\delta E}{E}
   $$
-  where $$ \delta E $$ is the FWHM of the peak.
-- Fit resolution as a function of energy using:
+
+  where $\delta E$ is the FWHM of the peak.
+  - Fit resolution as a function of energy using:
+
   $$
   R^2 = \left(\frac{\delta E}{E}\right)^2 = aE^{-2} + bE^{-1} + c
   $$
+
   or express using logarithmically scaled axes for clarity.
 
 ### 4. Detector Efficiency
 
-- Compute **absolute efficiency**:
+  - Compute **absolute efficiency**:
+
   $$
   \epsilon = \frac{\text{count rate}}{\text{source activity}}
   $$
-- Compute **intrinsic efficiency**:
+
+  -Compute **intrinsic efficiency**:
+  
   $$
   \epsilon = \frac{\text{count rate}}{\text{rate that photon passes through the detector}}
   $$
-- Fit intrinsic efficiency (log-log axes recommended):
+
+  - Fit intrinsic efficiency (log-log axes recommended):
+  
   $$
   \ln \epsilon_p = a + b \ln E + c (\ln E)^2
   $$
@@ -94,12 +105,14 @@ Ensure all scripts work as a single, integrated pipeline.
 
 ## Data Extraction and Processing
 
-- Use Python scripts to import spectral data, fit peaks, perform background subtraction, and extract relevant parameters (energy, FWHM, count rate).
-- Fit Gaussian or compound models to spectral peaks:
+  - Use Python scripts to import spectral data, fit peaks, perform background subtraction, and extract relevant parameters (energy, FWHM, count rate).
+  - Fit Gaussian or compound models to spectral peaks:
+
   $$
   f(x; \mu, \sigma^2, A) = \frac{A}{\sigma \sqrt{2\pi}} \, \exp\left(-\frac{(x-\mu)^2}{2\sigma^2}\right)
   $$
-- Report uncertainties and propagate errors in all results.
+
+  - Report uncertainties and propagate errors in all results.
 
 ***
 
