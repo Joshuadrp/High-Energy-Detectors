@@ -71,6 +71,17 @@ def gaussian_with_background(x, A, mu, sigma, bg):
     """Gaussian function with constant background"""
     return gaussian(x, A, mu, sigma) + bg
 
+
+def plot_spectrum(data, title):
+    """Plot a spectrum"""
+    plt.figure(figsize=(10, 6))
+    plt.plot(data['channels'], data['counts'])
+    plt.xlabel('Channel')
+    plt.ylabel('Counts')
+    plt.title(title)
+    plt.grid(True)
+    plt.show()
+
 # ============================================================================
 # MAIN: FIT ALL PEAKS
 # ============================================================================
@@ -84,39 +95,12 @@ am241 = load_spe(f"{base_path}/AM_ALIGN.Spe")
 ba133 = load_spe(f"{base_path}/BA_ALIGNED.Spe")
 
 # Plot CS-137 to find peak
-plt.figure(figsize=(10, 6))
-plt.plot(cs137['channels'], cs137['counts'])
-plt.xlabel('Channel')
-plt.ylabel('Counts')
-plt.title('CS-137 Spectrum')
-plt.grid(True)
-plt.show()
-
-
+plot_spectrum(cs137, f"CS137 aligned")
 # Plot Co-60 to find peaks
-plt.figure(figsize=(10, 6))
-plt.plot(co60['channels'], co60['counts'])
-plt.xlabel('Channel')
-plt.ylabel('Counts')
-plt.title('Co-60 Spectrum')
-plt.grid(True)
-plt.show()
-
+plot_spectrum(co60, f"C060 aligned")
 # Plot Am-241
-plt.figure(figsize=(10, 6))
-plt.plot(am241['channels'], am241['counts'])
-plt.xlabel('Channel')
-plt.ylabel('Counts')
-plt.title('Am-241 Spectrum')
-plt.grid(True)
-plt.show()
-
+plot_spectrum(am241, f"AM241 aligned")
 # Plot Ba-133
-plt.figure(figsize=(10, 6))
-plt.plot(ba133['channels'], ba133['counts'])
-plt.xlabel('Channel')
-plt.ylabel('Counts')
-plt.title('Ba-133 Spectrum')
-plt.grid(True)
-plt.show()
+plot_spectrum(ba133, f"BA133 aligned")
+
 
