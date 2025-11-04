@@ -2,10 +2,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 
-
-# ============================================================================
-# DATA LOADING
-# ============================================================================
+"""
+DATA LOADING FUNCTION
+"""
 
 def load_spe(filepath):
     """Load .spe file and return spectrum with metadata"""
@@ -51,7 +50,7 @@ def load_spe(filepath):
     counts = np.array(counts)
 
     return {
-        'channels': channels,
+        'channels': np.array(channels),
         'counts': counts,
         'filename': metadata['filename'],
         'detector': metadata['detector'],
@@ -59,10 +58,9 @@ def load_spe(filepath):
         'real_time': metadata['real_time'],
     }
 
-
-# ============================================================================
-# PEAK FITTING
-# ============================================================================
+"""
+PEAK FITTING
+"""
 
 def subtract_background(signal_data, background_data):
     """Subtract background spectrum from signal spectrum"""
@@ -81,7 +79,6 @@ def subtract_background(signal_data, background_data):
         'live_time': signal_data['live_time'],
         'real_time': signal_data['real_time'],
     }
-
 
 def gaussian(x, A, mu, sigma):
     """Gaussian function"""
@@ -124,64 +121,41 @@ def fit_peak(channels, counts, peak_channel, window=50):
         'FWHM': FWHM,
         'A': A,
         'bg': bg,
-        'mu_err': errors[1],
+        'mu_error': errors[1],
+        'pcov': pcov,  # Add covariance matrix
         'region_ch': region_ch,
         'region_counts': region_counts,
         'fitted_curve': gaussian_with_background(region_ch, A, mu, sigma, bg)
     }
 
+"""
+PLOT FIT SPECTRUM
+"""
 
-def plot_spectrum_with_fit(data, title, peak_channel, window=50):
-    """Plot spectrum with Gaussian fit overlaid only on peak region"""
+
+def plot_spectrum_with_fit(data, title, peak_channel, energy, window=50):
+    """Plot spectrum with improved Gaussian fit overlaid on peak region"""
     fit_result = fit_peak(data['channels'], data['counts'], peak_channel, window)
 
-    plt.figure(figsize=(10, 6))
-    plt.plot(data['channels'], data['counts'], 'b-', linewidth=1, label='Data')
-    plt.plot(fit_result['region_ch'], fit_result['fitted_curve'], 'r-', linewidth=2, label='Gaussian Fit')
+    plt.figure(figsize=(12, 7))
 
-    text = f"Peak: {fit_result['mu']:.2f}\nFWHM: {fit_result['FWHM']:.2f}\nσ: {fit_result['sigma']:.2f}"
-    plt.text(0.7, 0.95, text, transform=plt.gca().transAxes,
-             verticalalignment='top', bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.8))
+    # Plot data
+    plt.plot(energy, data['counts'], 'b-', linewidth=1, label='Data', alpha=0.7)
 
-    plt.xlabel('Channel')
-    plt.ylabel('Counts')
-    plt.title(title)
-    plt.legend()
-    plt.grid(True)
+    # Plot Gaussian fit
+    plt.plot(fit_result['region_ch'], fit_result['fitted_curve'], 'r-',
+             linewidth=2.5, label='Gaussian Fit')
+
+    # Highlight the fit region
+    plt.axvspan(fit_result['region_ch'][0], fit_result['region_ch'][-1],
+                alpha=0.1, color='yellow', label='Fit Region')
+
+    plt.xlabel('Channel', fontsize=12)
+    plt.ylabel('Counts', fontsize=12)
+    plt.title(title, fontsize=14, fontweight='bold')
+    plt.legend(loc='upper right', fontsize=10)
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
     plt.show()
 
     return fit_result
-
-
-# ============================================================================
-# MAIN
-# ============================================================================
-
-base_path = "Foreigners/NaITI"
-
-# Load data
-cs137 = load_spe(f"{base_path}/CS137_aligned.Spe")
-co60 = load_spe(f"{base_path}/CO60_aligned.Spe")
-am241 = load_spe(f"{base_path}/AM_aligned.Spe")
-ba133 = load_spe(f"{base_path}/BA_aligned.Spe")
-background = load_spe(f"{base_path}/BACKGROUND.Spe")
-
-# Subtract background
-print("Subtracting background...")
-cs137 = subtract_background(cs137, background)
-co60 = subtract_background(co60, background)
-am241 = subtract_background(am241, background)
-ba133 = subtract_background(ba133, background)
-
-# Fit and plot peaks
-print("\nCS-137")
-cs137_fit = plot_spectrum_with_fit(cs137, title="CS-137", peak_channel=300)
-
-print("\nCo-60")
-co60_fit = plot_spectrum_with_fit(co60, "Co-60", peak_channel=490)
-
-print("\nAm-241")
-am241_fit = plot_spectrum_with_fit(am241, "Am-241", peak_channel=50)
-
-print("\nBa-133")
-ba133_fit = plot_spectrum_with_fit(ba133, "Ba-133", peak_channel=150)
