@@ -24,7 +24,7 @@ ba133 = subtract_background(ba133, background)
 # CALIBRATION EQUATION RESULTS FROM CALIBRATION FUNCTION FILE
 naiti_file = "Foreigners/NaITI/NaITI.yaml"
 x,y,coeffs, m,b = calibrate(naiti_file)
-plot_calibration(x, y, coeffs)
+# plot_calibration(x, y, coeffs)
 
 test_channels = cs137['channels']
 energy = energy_calibration_equation(m,cs137['channels'],b)
@@ -32,13 +32,13 @@ print(energy)
 
 # Fit and plot peaks
 print("\nCS-137")
-cs137_fit = plot_spectrum_with_fit(cs137, energy=energy, title="CS-137", peak_channel=300)
+cs137_fit = plot_spectrum_with_fit(energy, cs137['counts'], title="CS-137", peak=762)
 print("\nCo-60")
-co60_fit = plot_spectrum_with_fit(co60, "Co-60", peak_channel=490)
+co60_fit = plot_spectrum_with_fit(energy, co60['counts'], title="CO60", peak=1282.6)
 print("\nAm-241")
-am241_fit = plot_spectrum_with_fit(am241, "Am-241", peak_channel=50)
+am241_fit = plot_spectrum_with_fit(energy, am241['counts'], title="AM-247", peak=77)
 print("\nBa-133")
-ba133_fit = plot_spectrum_with_fit(ba133, "Ba-133", peak_channel=150)
+ba133_fit = plot_spectrum_with_fit(energy, ba133['counts'], title="BA-133", peak=351)
 
 # UNCERTAINTIES
 pcov_cs137 = cs137_fit['pcov']

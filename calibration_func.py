@@ -17,17 +17,16 @@ def calibrate(yaml_file):
 
     return x, y, coeffs, m, b
 
-
 def energy_calibration_equation(c1,channel, c0):
     return c1 * channel + c0
 
-def plot_calibration(x, y, coeffs):
-    x_fit = np.linspace(x.min(), x.max(), 100)
-    y_fit = np.polyval(coeffs, x_fit)
-    plt.scatter(x, y, label='Data')
-    plt.plot(x_fit, y_fit, 'r--', label='Fit')
-    plt.xlabel('Channel')
-    plt.ylabel('Energy (keV)')
-    plt.title('Energy vs Channel')
-    plt.legend()
-    plt.show()
+# def plot_calibration(x, y, coeffs):
+#     x_fit = np.linspace(x.min(), x.max(), 100)
+#     y_fit = np.polyval(coeffs, x_fit)
+#     plt.scatter(x, y, label='Data')
+#     plt.plot(x_fit, y_fit, 'r--', label='Fit')
+#     plt.xlabel('Channel')
+#     plt.ylabel('Energy (keV)')
+#     plt.title('Energy vs Channel')
+#     plt.legend()
+#     plt.show()
