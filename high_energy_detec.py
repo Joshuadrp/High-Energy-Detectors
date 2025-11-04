@@ -161,9 +161,9 @@ base_path = "Foreigners/NaITI"
 
 # Load data
 cs137 = load_spe(f"{base_path}/CS137_aligned.Spe")
-co60 = load_spe(f"{base_path}/CO60_align.Spe")
-am241 = load_spe(f"{base_path}/AM_ALIGN.Spe")
-ba133 = load_spe(f"{base_path}/BA_ALIGNED.Spe")
+co60 = load_spe(f"{base_path}/CO60_aligned.Spe")
+am241 = load_spe(f"{base_path}/AM_aligned.Spe")
+ba133 = load_spe(f"{base_path}/BA_aligned.Spe")
 background = load_spe(f"{base_path}/BACKGROUND.Spe")
 
 # Subtract background
@@ -178,7 +178,7 @@ print("\nCS-137")
 cs137_fit = plot_spectrum_with_fit(cs137, title="CS-137", peak_channel=300)
 
 print("\nCo-60")
-co60_fit = plot_spectrum_with_fit(co60, "Co-60", peak_channel=100)
+co60_fit = plot_spectrum_with_fit(co60, "Co-60", peak_channel=490)
 
 print("\nAm-241")
 am241_fit = plot_spectrum_with_fit(am241, "Am-241", peak_channel=50)
