@@ -1,6 +1,4 @@
 from high_detectors_functions import *
-from calibration_func import *
-
 # ============================================================================
 # MAIN
 # ============================================================================
@@ -21,26 +19,13 @@ co60 = subtract_background(co60, background)
 am241 = subtract_background(am241, background)
 ba133 = subtract_background(ba133, background)
 
-# CALIBRATION EQUATION RESULTS FROM CALIBRATION FUNCTION FILE
-# naiti_file = "Foreigners/NaITI/NaITI.yaml"
-# x,y,coeffs, m,b = calibrate(naiti_file)
-# plot_calibration(x, y, coeffs)
-#
-# test_channels = cs137['channels']
-# energy = energy_calibration_equation(m,cs137['channels'],b)
-# print(energy)
-
 # Fit and plot peaks
-print("\nCS-137")
 cs137_fit = plot_spectrum_with_fit(cs137, title="CS-137", peak_channel=300)
-print("\nCo-60")
 co60_fit = plot_spectrum_with_fit(co60, "Co-60", peak_channel=490)
-print("\nAm-241")
 am241_fit = plot_spectrum_with_fit(am241, "Am-241", peak_channel=50)
-print("\nBa-133")
 ba133_fit = plot_spectrum_with_fit(ba133, "Ba-133", peak_channel=150)
 
-# UNCERTAINTIES
+# UNCERTAINTIES USING CHANNLES ----------------------------------------
 pcov_cs137 = cs137_fit['pcov']
 pcov_co60 = co60_fit['pcov']
 pcov_am241 = am241_fit['pcov']
@@ -51,9 +36,44 @@ pcovs_isotopes = [pcov_co60, pcov_am241, pcov_ba133,pcov_cs137]
 for i in pcovs_isotopes:
     errors.append(np.sqrt(np.diag(i)))
 
-# Print uncertainties
-print(f"\nCS137:\nMean (mu): {cs137_fit['mu']:.2f} ± {errors[3][1]:.2f}")
+# Print uncertainties (CHANNEL UNCERTAINTIES)
 print(f"\nCO60:\nMean (mu): {co60_fit['mu']:.2f} ± {errors[0][1]:.2f}")
 print(f"\nAM247:\nMean (mu): {am241_fit['mu']:.2f} ± {errors[1][1]:.2f}")
-print(f"\nBA133:\nMean (mu): {ba133_fit['mu']:.2f} ± {errors[2][1]:.2f}\n")
+print(f"\nBA133:\nMean (mu): {ba133_fit['mu']:.2f} ± {errors[2][1]:.2f}")
+print(f"\nCS137:\nMean (mu): {cs137_fit['mu']:.2f} ± {errors[3][1]:.2f}")
+
+"""
+END OF CHANNEL UNCERTAINTIES
+"""
+
+# CALIBRATION EQUATION RESULTS FROM CALIBRATION FUNCTION FILE
+naiti_file = "Foreigners/NaITI/NaITI.yaml"
+x,y,coeffs, m,b, m_uncert,b_uncert = calibrate(naiti_file)
+print(m_uncert,b_uncert)
+plot_calibration(x, y, coeffs)
+
+cs137_energy = energy_calibration_equation(m,cs137['channels'],b)
+am241_energy = energy_calibration_equation(m,am241['channels'],b)
+ba133_energy = energy_calibration_equation(m,ba133['channels'],b)
+co60_energy = energy_calibration_equation(m,co60['channels'],b)
+
+cs137_fit_energy = plot_spectrum_with_fit_energy(energy=cs137_energy, y=cs137['counts'], title="CS-137", peak_channel=700)
+cs137_prop_error=propagate_energy_uncertainty(cs137_fit['mu'], errors[3][1], m, b, m_uncert, b_uncert)
+print(cs137_prop_error)
+
+co60_fit_energy = plot_spectrum_with_fit_energy(energy=co60_energy,y=co60['counts'], title="Co-60", peak_channel=1332 )
+co60_prop_error = propagate_energy_uncertainty(co60_fit['mu'], errors[0][1], m, b, m_uncert, b_uncert)
+print(co60_prop_error)
+
+# am241_fit_energy = plot_spectrum_with_fit_energy(energy=am241_energy,y=am241['counts'], title="AM-241", peak_channel=200 )
+# am241_prop_error = propagate_energy_uncertainty(am241_fit['mu'], errors[1][1], m, b, m_uncert, b_uncert)
+# print(am241_prop_error)
+
+ba133_fit_energy = plot_spectrum_with_fit_energy(energy=ba133_energy,y=ba133['counts'], title="BA-133", peak_channel=356 )
+ba133_prop_error=propagate_energy_uncertainty(ba133_fit['mu'], errors[2][1], m, b, m_uncert, b_uncert)
+print(ba133_prop_error)
+
+
+
+
 
