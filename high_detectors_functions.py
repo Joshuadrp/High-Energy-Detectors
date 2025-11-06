@@ -133,19 +133,23 @@ PLOT FIT SPECTRUM
 """
 
 
-def plot_spectrum_with_fit(x,y, title, peak, window=50):
+def plot_spectrum_with_fit(data, title, peak_channel, window=50):
     """Plot spectrum with improved Gaussian fit overlaid on peak region"""
-    fit_result = fit_peak(x, y, peak, window)
+    fit_result = fit_peak(data['channels'], data['counts'], peak_channel, window)
     plt.figure(figsize=(12, 7))
+
     # Plot data
-    plt.plot(x,y, 'b-', linewidth=1, label='Data', alpha=0.7)
+    plt.plot(data['channels'], data['counts'], 'b-', linewidth=1, label='Data', alpha=0.7)
+
     # Plot Gaussian fit
     plt.plot(fit_result['region_ch'], fit_result['fitted_curve'], 'r-',
              linewidth=2.5, label='Gaussian Fit')
+
     # Highlight the fit region
     plt.axvspan(fit_result['region_ch'][0], fit_result['region_ch'][-1],
                 alpha=0.1, color='yellow', label='Fit Region')
-    plt.xlabel('Energy(Kev)', fontsize=12)
+
+    plt.xlabel('Channel', fontsize=12)
     plt.ylabel('Counts', fontsize=12)
     plt.title(title, fontsize=14, fontweight='bold')
     plt.legend(loc='upper right', fontsize=10)
