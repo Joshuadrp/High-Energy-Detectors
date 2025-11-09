@@ -73,7 +73,14 @@ ba133_fit_energy = plot_spectrum_with_fit_energy(energy=ba133_energy,y=ba133['co
 ba133_prop_error=propagate_energy_uncertainty(ba133_fit['mu'], errors[2][1], m, b, m_uncert, b_uncert)
 print(ba133_prop_error)
 
+"""
+Efficiency functions
+"""
+photon_amt_Cs, cesium = calc_half_life('137-Cs')
+photon_amt_Am, amer = calc_half_life('241-Am')
+photon_amt_Ba, bar = calc_half_life('133-Ba')
+photon_amt_Co, cob = calc_half_life('60-Co')
 
-
+Cs_eff = efficiency(cesium, cs137['counts'],photon_amt_Cs,cs137_energy,288.44,4000)
 
 
