@@ -2,7 +2,7 @@ from high_detectors_functions import *
 # ============================================================================
 # MAIN
 # ============================================================================
-base_path = "Foreigners/NaITI"
+base_path = "Foreigners/BGO"
 
 # Load data
 cs137 = load_spe(f"{base_path}/CS137_aligned.Spe")

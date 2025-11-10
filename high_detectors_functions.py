@@ -6,10 +6,31 @@ import yaml
 """
 DATA LOADING FUNCTION
 """
-
-
 def load_spe(filepath):
-    """Load .spe file and return spectrum with metadata"""
+    """Load .spe (NaI/BGO) or .mca (CdTe) file and return spectrum with metadata"""
+
+    # Check file extension
+    if filepath.endswith('.mca'):
+        # Binary format - CdTe detector
+        try:
+            counts = np.fromfile(filepath, dtype=np.uint32)
+            counts = counts[128:]  # Skip header
+        except:
+            counts = np.fromfile(filepath, dtype=np.uint16)
+            counts = counts[256:]
+
+        channels = np.arange(len(counts))
+
+        return {
+            'channels': channels,
+            'counts': counts,
+            'filename': filepath.split('/')[-1],
+            'detector': 'CdTe',
+            'live_time': None,
+            'real_time': None,
+        }
+
+    # ASCII format - .spe files (NaI/BGO)
     with open(filepath, 'r') as f:
         lines = f.readlines()
 
@@ -57,7 +78,6 @@ def load_spe(filepath):
         'real_time': metadata['real_time'],
     }
 
-
 """
 PEAK FITTING
 """
@@ -67,11 +87,19 @@ def subtract_background(signal_data, background_data):
     """Subtract background spectrum from signal spectrum"""
     signal_counts = signal_data['counts'].copy()
     background_counts = background_data['counts']
+
+    # Handle different lengths - min length
+    min_length = min(len(signal_counts), len(background_counts))
+
+    signal_counts = signal_counts[:min_length]
+    background_counts = background_counts[:min_length]
+
+    # Subtract and ensure no negative counts
     corrected_counts = signal_counts - background_counts
     corrected_counts = np.maximum(corrected_counts, 0)
 
     return {
-        'channels': signal_data['channels'],
+        'channels': signal_data['channels'][:min_length],
         'counts': corrected_counts,
         'filename': signal_data['filename'],
         'detector': signal_data['detector'],
@@ -84,11 +112,9 @@ def gaussian(x, A, mu, sigma):
     """Gaussian function"""
     return (A / (sigma * np.sqrt(2 * np.pi))) * np.exp(-((x - mu) ** 2) / (2 * sigma ** 2))
 
-
 def gaussian_with_background(x, A, mu, sigma, bg):
     """Gaussian with background"""
     return gaussian(x, A, mu, sigma) + bg
-
 
 def fit_peak(channels, counts, peak_channel, window=50):
     """Fit Gaussian to a peak"""
