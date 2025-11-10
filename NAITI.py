@@ -65,9 +65,9 @@ co60_fit_energy = plot_spectrum_with_fit_energy(energy=co60_energy,y=co60['count
 co60_prop_error = propagate_energy_uncertainty(co60_fit['mu'], errors[0][1], m, b, m_uncert, b_uncert)
 print(co60_prop_error)
 
-# am241_fit_energy = plot_spectrum_with_fit_energy(energy=am241_energy,y=am241['counts'], title="AM-241", peak_channel=200 )
-# am241_prop_error = propagate_energy_uncertainty(am241_fit['mu'], errors[1][1], m, b, m_uncert, b_uncert)
-# print(am241_prop_error)
+am241_fit_energy = plot_spectrum_with_fit_energy(energy=am241_energy,y=am241['counts'], title="AM-241", peak_channel=50 )
+am241_prop_error = propagate_energy_uncertainty(am241_fit['mu'], errors[1][1], m, b, m_uncert, b_uncert)
+print(am241_prop_error)
 
 ba133_fit_energy = plot_spectrum_with_fit_energy(energy=ba133_energy,y=ba133['counts'], title="BA-133", peak_channel=356 )
 ba133_prop_error=propagate_energy_uncertainty(ba133_fit['mu'], errors[2][1], m, b, m_uncert, b_uncert)
@@ -81,6 +81,13 @@ photon_amt_Am, amer = calc_half_life('241-Am')
 photon_amt_Ba, bar = calc_half_life('133-Ba')
 photon_amt_Co, cob = calc_half_life('60-Co')
 
-Cs_eff = efficiency(cesium, cs137['counts'],photon_amt_Cs,cs137_energy,288.44,4000)
+cs_intrinsic = intrinsic()
+am_instrinsic = intrinsic()
+ba_intrinsic = intrinsic()
+co_intrinsic = intrinsic()
 
+Cs_eff = efficiency(cesium, cs137['counts'],photon_amt_Cs,cs137_energy,288.44,cs_intrinsic)
+Am_eff = efficiency(amer, am241['counts'],photon_amt_Am,am241_energy,28.84,am_instrinsic)
+Ba_eff = efficiency(bar, ba133['counts'],photon_amt_Ba,ba133_energy,157.25,ba_intrinsic)
+Co_eff = efficiency(cob, co60['counts'],photon_amt_Co,co60_energy,493,co_intrinsic)
 

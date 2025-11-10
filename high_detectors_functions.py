@@ -280,3 +280,8 @@ def efficiency(nuclide,detected_counts, emiited_counts,peak_energy,isotope_energ
     print(f'The Absolute Efficiency of {nuclide} is {abs_eff}')
     print(f'The Intrinsic Efficiency of {nuclide} is {int_eff}')
     return abs_eff, int_eff
+
+def intrinsic(activity,area_detector,distance):
+    intrinsic_rate = activity * area_detector/(4*pi*distance)
+    
+    return intrinsic_rate
