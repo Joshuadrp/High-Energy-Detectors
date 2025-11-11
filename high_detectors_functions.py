@@ -274,15 +274,15 @@ def intrinsic(activity,diameter,distance):
     
     return intrinsic_rate
 
-def efficiency(nuclide,detected_counts, emiited_counts,peak_energy,isotope_energy, incident_counts):
+def efficiency(nuclide,detected_counts, emiited_counts,peak_energy,isotope_energy, incident_counts,time):
     peak_energy = peak_energy
     idx = np.argmin(np.abs(isotope_energy - peak_energy))
 
 # Get the counts at that index
     peak_counts = detected_counts[idx]
     
-    abs_eff = peak_counts/emiited_counts
-    int_eff = peak_counts/incident_counts
+    abs_eff = (peak_counts/time)/emiited_counts
+    int_eff = (peak_counts/time)/incident_counts
     print(f'The Absolute Efficiency of {nuclide} is {100*abs_eff}%')
     print(f'The Intrinsic Efficiency of {nuclide} is {100*int_eff}%')
     return abs_eff, int_eff

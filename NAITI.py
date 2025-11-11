@@ -11,7 +11,7 @@ am241 = load_spe(f"{base_path}/AM_aligned.Spe")
 ba133 = load_spe(f"{base_path}/BA_aligned.Spe")
 background = load_spe(f"{base_path}/BACKGROUND.Spe")
 print(cs137['channels'])
-
+print(cs137['live_time'])
 # Subtract background
 print("Subtracting background...")
 cs137 = subtract_background(cs137, background)
@@ -86,7 +86,7 @@ cs_intrinsic = intrinsic(photon_amt_Cs,5.08,16)
 #ba_intrinsic = intrinsic()
 #co_intrinsic = intrinsic()
 
-Cs_eff = efficiency(cesium, cs137['counts'],photon_amt_Cs,cs137_energy,288.44,cs_intrinsic)
+Cs_eff = efficiency(cesium, cs137['counts'],photon_amt_Cs,cs137_energy,288.44,cs_intrinsic,cs137['real_time'])
 #Am_eff = efficiency(amer, am241['counts'],photon_amt_Am,am241_energy,28.84,am_instrinsic)
 #Ba_eff = efficiency(bar, ba133['counts'],photon_amt_Ba,ba133_energy,157.25,ba_intrinsic)
 #Co_eff = efficiency(cob, co60['counts'],photon_amt_Co,co60_energy,493,co_intrinsic)
