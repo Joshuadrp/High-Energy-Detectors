@@ -268,6 +268,12 @@ def calc_half_life(nuclide, elap_time=45.88,
 
     return photon_amt, nuclide
 
+def intrinsic(activity,diameter,distance):
+
+    intrinsic_rate = activity * (np.pi*(diameter/2)**2)/(4*np.pi*distance)
+    
+    return intrinsic_rate
+
 def efficiency(nuclide,detected_counts, emiited_counts,peak_energy,isotope_energy, incident_counts):
     peak_energy = peak_energy
     idx = np.argmin(np.abs(isotope_energy - peak_energy))
@@ -277,11 +283,7 @@ def efficiency(nuclide,detected_counts, emiited_counts,peak_energy,isotope_energ
     
     abs_eff = peak_counts/emiited_counts
     int_eff = peak_counts/incident_counts
-    print(f'The Absolute Efficiency of {nuclide} is {abs_eff}')
-    print(f'The Intrinsic Efficiency of {nuclide} is {int_eff}')
+    print(f'The Absolute Efficiency of {nuclide} is {100*abs_eff}%')
+    print(f'The Intrinsic Efficiency of {nuclide} is {100*int_eff}%')
     return abs_eff, int_eff
 
-def intrinsic(activity,area_detector,distance):
-    intrinsic_rate = activity * area_detector/(4*pi*distance)
-    
-    return intrinsic_rate
