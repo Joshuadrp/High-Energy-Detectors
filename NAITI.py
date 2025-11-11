@@ -37,10 +37,10 @@ for i in pcovs_isotopes:
     errors.append(np.sqrt(np.diag(i)))
 
 # Print uncertainties (CHANNEL UNCERTAINTIES)
-print(f"CO60:\nMean (mu): {co60_fit['mu']:.2f} ± {errors[0][1]:.2f}")
-print(f"AM247:\nMean (mu): {am241_fit['mu']:.2f} ± {errors[1][1]:.2f}")
-print(f"BA133:\nMean (mu): {ba133_fit['mu']:.2f} ± {errors[2][1]:.2f}")
-print(f"CS137:\nMean (mu): {cs137_fit['mu']:.2f} ± {errors[3][1]:.2f}")
+print(f"CO60:\nMean (mu): {co60_fit['mu']:.2f} ± {co60_fit['mu_err']:.2f}")
+print(f"AM247:\nMean (mu): {am241_fit['mu']:.2f} ± {am241_fit['mu_err']:.2f}")
+print(f"BA133:\nMean (mu): {ba133_fit['mu']:.2f} ± {ba133_fit['mu_err']:.2f}")
+print(f"CS137:\nMean (mu): {cs137_fit['mu']:.2f} ± {cs137_fit['mu_err']:.2f}")
 
 """
 END OF CHANNEL UNCERTAINTIES

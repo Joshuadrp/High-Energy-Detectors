@@ -142,6 +142,7 @@ def fit_peak(channels, counts, peak_channel, window=50):
         'mu': mu,
         'sigma': sigma,
         'FWHM': FWHM,
+        'mu_err': errors[1],
         'A': A,
         'bg': bg,
         'pcov': pcov,
