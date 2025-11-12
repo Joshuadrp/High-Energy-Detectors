@@ -256,34 +256,58 @@ def calc_half_life(nuclide, elap_time=45.88,
     for index, row in df.iterrows():
         key = str(row.iloc[0]).strip()
         nuclide_activity[key] = row.iloc[3]
+    nuclide_activity_uncert = {}
+    for index, row in df.iterrows():
+        key = str(row.iloc[0]).strip()
+        nuclide_activity_uncert[key] = row.iloc[4]
     
-    # Use reversed format for half-life lookup
     curie_amt = nuclide_activity[nuclide]*(1/2)**(elap_time/reversed_half_life[nuclide])
     photon_amt = curie_amt*37000
+    
+    curie_amt_err = nuclide_activity_uncert[nuclide] *(1/2)**(elap_time/reversed_half_life[nuclide])
+    photon_amt_err = curie_amt_err * 37000
     
     print(f'--- {nuclide} ACTIVITY AND HALFLIFE ---')
     print(f'{curie_amt:.2f} is the current activity in uCi')
     print(f'{photon_amt:.2f} is the photons per second given the activity')
+    print(f'Photon emission uncertainty: ±{photon_amt_err:.2f} photons/s')
     print(f'Half life of {nuclide} is {reversed_half_life[nuclide]} years')
 
-    return photon_amt, nuclide
+    return photon_amt, nuclide, photon_amt_err
 
-def intrinsic(activity,diameter,distance):
+def intrinsic(activity,activity_err,diameter ,distance):
 
     intrinsic_rate = activity * (np.pi*(diameter/2)**2)/(4*np.pi*distance)
+    intrinsic_rate_err = activity_err * (np.pi*(diameter/2)**2)/(4*np.pi*distance**2)
+    return intrinsic_rate, intrinsic_rate_err
+
+
+
+def efficiency_uncertainty(nuclide,counts, energy,peak_energy,peak_counts_err, time, 
+                          emitted_counts, emitted_counts_err,
+                          incident_counts, incident_counts_err):
     
-    return intrinsic_rate
+    idx = np.argmin(np.abs(energy - peak_energy))
 
-def efficiency(nuclide,detected_counts, emiited_counts,peak_energy,isotope_energy, incident_counts,time):
-    peak_energy = peak_energy
-    idx = np.argmin(np.abs(isotope_energy - peak_energy))
-
-# Get the counts at that index
-    peak_counts = detected_counts[idx]
+# Get the counts at that peak
+    peak_counts = counts[idx]
+    # Count rate and its uncertainty
+    count_rate = peak_counts / time
+    count_rate_err = peak_counts_err / time
     
-    abs_eff = (peak_counts/time)/emiited_counts
-    int_eff = (peak_counts/time)/incident_counts
-    print(f'The Absolute Efficiency of {nuclide} is {100*abs_eff}%')
-    print(f'The Intrinsic Efficiency of {nuclide} is {100*int_eff}%')
-    return abs_eff, int_eff
-
+    # Absolute efficiency error: σ(ε_abs) = ε_abs * sqrt((σ_rate/rate)^2 + (σ_emitted/emitted)^2)
+    abs_eff = count_rate / emitted_counts
+    abs_eff_err = abs_eff * np.sqrt(
+        (count_rate_err / count_rate)**2 + 
+        (emitted_counts_err / emitted_counts)**2
+    )
+    
+    # Intrinsic efficiency error: σ(ε_int) = ε_int * sqrt((σ_rate/rate)^2 + (σ_incident/incident)^2)
+    int_eff = count_rate / incident_counts
+    int_eff_err = int_eff * np.sqrt(
+        (count_rate_err / count_rate)**2 + 
+        (incident_counts_err / incident_counts)**2
+    )
+    print(f'The Absolute Efficiency of {nuclide} is {100*abs_eff:.4f}±{abs_eff_err*100:.4f}%')
+    print(f'The Intrinsic Efficiency of {nuclide} is {100*int_eff:.4f}±{int_eff_err*100:.4f}%')
+    return abs_eff, int_eff, abs_eff_err, int_eff_err
