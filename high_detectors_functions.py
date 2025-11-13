@@ -110,7 +110,7 @@ def subtract_background(signal_data, background_data):
 
 def gaussian(x, A, mu, sigma):
     """Gaussian function"""
-    return (A / (sigma * np.sqrt(2 * np.pi))) * np.exp(-((x - mu) ** 2) / (2 * sigma ** 2))
+    return A * np.exp(-(x - mu) ** 2 / (2 * sigma ** 2))
 
 def gaussian_with_background(x, A, mu, sigma, bg):
     """Gaussian with background"""
@@ -127,7 +127,11 @@ def fit_peak(channels, counts, peak_channel, window=50):
 
     A_guess = np.sum(region_counts)
     mu_guess = region_ch[np.argmax(region_counts)]
-    sigma_guess = 5.0
+
+    # ADAPTIVE SIGMA GUESS - scales with peak position
+    # For channels: ~5, for energy (keV): ~peak_energy/100
+    sigma_guess = max(5.0, mu_guess / 100)  # ← FIX HERE
+
     bg_guess = np.min(region_counts)
 
     popt, pcov = curve_fit(gaussian_with_background, region_ch, region_counts,
@@ -143,6 +147,8 @@ def fit_peak(channels, counts, peak_channel, window=50):
         'sigma': sigma,
         'FWHM': FWHM,
         'mu_err': errors[1],
+        'sigma_err': errors[2],
+        'amp_err': errors[0],
         'A': A,
         'bg': bg,
         'pcov': pcov,
@@ -177,6 +183,7 @@ def calibrate(yaml_file):
 
     x = np.array(list(peak_dict['Peaks'].values())).flatten()
     y = np.array(list(peak_dict['Energies'].values())).flatten()
+
     coeffs, pcov = np.polyfit(x, y, 1, cov=True)
     m, b = coeffs[0], coeffs[1]
     m_uncert, b_uncert = np.sqrt(np.diag(pcov))
@@ -190,7 +197,6 @@ def energy_calibration_equation(c1, channel, c0):
 """
 PLOT FUNCTIONS
 """
-
 
 def plot_spectrum_with_fit(data, title, peak_channel, window=50):
     """Plot spectrum with Gaussian fit"""
@@ -245,35 +251,36 @@ def plot_calibration(x, y, coeffs):
     plt.title('Energy vs Channel')
     plt.legend()
     plt.show()
+
 """
-Efficiency Functions
+SOURCE ACTIVITY
 """
 
-def calc_half_life(nuclide, elap_time=45.88, 
+def calc_half_life(nuclide, elap_time=45.88,
                    isotope_file='efficiency_files/isotope_data(1).yaml',
                    activity_file='efficiency_files/set1184_downstairs(1).dat'):
-    
+
     with open(isotope_file, 'r') as f:
         content = f.read()
-    isotopes = [yaml.safe_load('Isotope:' + section) 
+    isotopes = [yaml.safe_load('Isotope:' + section)
                 for section in content.split('Isotope:')[1:]]
-    
+
     for isotope in isotopes:
         half_life = isotope['Half-life']
         if isinstance(half_life, str):
             half_life = half_life.replace('years', '').replace('year', '').strip()
             isotope['Half-life'] = float(half_life)
-    
+
     isotope_dict = {isotope['Isotope']: isotope for isotope in isotopes}
     half_life_dict = {iso['Isotope']: iso['Half-life'] for iso in isotopes}
-    
+
     # Also create reversed format dict (60-Co -> Co-60)
     reversed_half_life = {}
     for key in half_life_dict:
         parts = key.split('-')
         reversed_key = f"{parts[1]}-{parts[0]}"
         reversed_half_life[reversed_key] = half_life_dict[key]
-    
+
     df = pd.read_csv(activity_file)
     nuclide_activity = {}
     for index, row in df.iterrows():
@@ -283,13 +290,13 @@ def calc_half_life(nuclide, elap_time=45.88,
     for index, row in df.iterrows():
         key = str(row.iloc[0]).strip()
         nuclide_activity_uncert[key] = row.iloc[4]
-    
+
     curie_amt = nuclide_activity[nuclide]*(1/2)**(elap_time/reversed_half_life[nuclide])
     photon_amt = curie_amt*37000
-    
+
     curie_amt_err = nuclide_activity_uncert[nuclide] *(1/2)**(elap_time/reversed_half_life[nuclide])
     photon_amt_err = curie_amt_err * 37000
-    
+
     print(f'--- {nuclide} ACTIVITY AND HALFLIFE ---')
     print(f'{curie_amt:.2f} is the current activity in uCi')
     print(f'{photon_amt:.2f} is the photons per second given the activity')
@@ -297,6 +304,147 @@ def calc_half_life(nuclide, elap_time=45.88,
     print(f'Half life of {nuclide} is {reversed_half_life[nuclide]} years')
 
     return photon_amt, nuclide, photon_amt_err
+
+
+"""
+ENERGY RESOLUTION
+"""
+
+def calculate_resolution(isotope_names, fits, energy_fits, m, b, known_energies, use_channel_conversion=None):
+    """
+    Calculate energy resolution for multiple isotopes
+
+    Args:
+        isotope_names: list of isotope names
+        fits: list of channel-space fit results
+        energy_fits: list of energy-space fit results
+        m, b: calibration parameters
+        known_energies: list of known energies for each isotope
+        use_channel_conversion: list of isotope names to use channel conversion (e.g., ['CO60'])
+
+    Returns:
+        list of dicts with FWHM_energy, resolution, energy
+    """
+    if use_channel_conversion is None:
+        use_channel_conversion = []
+
+    resolutions = []
+
+    for i, name in enumerate(isotope_names):
+        if name in use_channel_conversion:
+            # Use channel-space fit (more reliable for noisy peaks)
+            FWHM_energy = m * fits[i]['FWHM']
+            fitted_energy = m * fits[i]['mu'] + b
+            print(f"  {name}: Using channel-space conversion")
+        else:
+            # Use energy-space fit
+            FWHM_energy = energy_fits[i]['FWHM']
+            fitted_energy = energy_fits[i]['mu']
+
+        resolution = (FWHM_energy / fitted_energy) * 100
+
+        resolutions.append({
+            'FWHM_energy': FWHM_energy,
+            'resolution': resolution,
+            'energy': known_energies[i]
+        })
+
+        print(f"{name}: FWHM = {FWHM_energy:.2f} keV, Resolution = {resolution:.2f}%")
+
+    return resolutions
+
+
+def plot_resolution_vs_energy(resolutions, detector_name='NaI'):
+    """
+    Plot energy resolution as a function of energy
+
+    Args:
+        resolutions: list of dicts with 'energy', 'resolution', and optionally 'resolution_err'
+        detector_name: name of detector
+    """
+    energies = [r['energy'] for r in resolutions]
+    resolution_vals = [r['resolution'] for r in resolutions]
+
+    # Check if resolution_err exists, if not, don't plot error bars
+    has_errors = 'resolution_err' in resolutions[0]
+
+    plt.figure(figsize=(10, 6))
+
+    if has_errors:
+        resolution_errs = [r['resolution_err'] for r in resolutions]
+        plt.errorbar(energies, resolution_vals, yerr=resolution_errs,
+                     fmt='o', markersize=8, capsize=5, label='Data')
+    else:
+        plt.plot(energies, resolution_vals, 'o', markersize=8, label='Data')
+
+    plt.xlabel('Energy (keV)', fontsize=12)
+    plt.ylabel('Energy Resolution (%)', fontsize=12)
+    plt.title(f'{detector_name} Energy Resolution vs Energy', fontsize=14, fontweight='bold')
+    plt.grid(True, alpha=0.3)
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
+
+
+def fit_resolution_curve(resolutions):
+    """
+    Fit the resolution curve: R² = aE⁻² + bE⁻¹ + c
+    Plots on both linear and logarithmic scales
+
+    Args:
+        resolutions: list of dicts with 'energy' and 'resolution'
+
+    Returns:
+        fitted parameters a, b, c, errors
+    """
+    energies = np.array([r['energy'] for r in resolutions])
+    resolution_vals = np.array([r['resolution'] for r in resolutions])
+
+    # R² = a/E² + b/E + c
+    def res_squared_model(E, a, b, c):
+        return a / E ** 2 + b / E + c
+
+    # Fit R² vs E
+    R_squared = (resolution_vals / 100) ** 2  # Convert % to fraction
+
+    popt, pcov = curve_fit(res_squared_model, energies, R_squared)
+    a, b, c = popt
+    errors = np.sqrt(np.diag(pcov))
+
+    # print("\n=== Resolution Curve Fit ===")
+    # print(f"R² = {a:.6f}/E² + {b:.6f}/E + {c:.6f}")
+    # print(f"Uncertainties: a={errors[0]:.6f}, b={errors[1]:.6f}, c={errors[2]:.6f}")
+
+    # Generate fit curve (use logspace for smooth log plot)
+    E_fit = np.logspace(np.log10(min(energies)), np.log10(max(energies)), 100)
+    R_squared_fit = res_squared_model(E_fit, a, b, c)
+    R_fit = np.sqrt(np.abs(R_squared_fit)) * 100
+
+    # Check if resolution_err exists
+    has_errors = 'resolution_err' in resolutions[0]
+
+    #Log-Log Scale (as recommended)
+
+    plt.figure(figsize=(10, 6))
+
+    if has_errors:
+        resolution_errs = [r['resolution_err'] for r in resolutions]
+        plt.errorbar(energies, resolution_vals, yerr=resolution_errs,
+                     fmt='o', markersize=10, capsize=5, label='Data')
+    else:
+        plt.loglog(energies, resolution_vals, 'o', markersize=10, label='Data')
+
+    plt.loglog(E_fit, R_fit, 'r-', linewidth=2, label='Fitted Curve')
+
+    plt.xlabel('Energy (keV)', fontsize=12)
+    plt.ylabel('Energy Resolution (%)', fontsize=12)
+    plt.title('Energy Resolution vs Energy (Log-Log Scale)', fontsize=14, fontweight='bold')
+    plt.grid(True, alpha=0.3, which='both')
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
+
+    return a, b, c, errors
 
 def intrinsic(activity,activity_err,diameter ,distance):
 
@@ -306,10 +454,10 @@ def intrinsic(activity,activity_err,diameter ,distance):
 
 
 
-def efficiency_uncertainty(nuclide,counts, energy,peak_energy,peak_counts_err, time, 
+def efficiency_uncertainty(nuclide,counts, energy,peak_energy,peak_counts_err, time,
                           emitted_counts, emitted_counts_err,
                           incident_counts, incident_counts_err):
-    
+
     idx = np.argmin(np.abs(energy - peak_energy))
 
 # Get the counts at that peak
@@ -317,18 +465,17 @@ def efficiency_uncertainty(nuclide,counts, energy,peak_energy,peak_counts_err, t
     # Count rate and its uncertainty
     count_rate = peak_counts / time
     count_rate_err = peak_counts_err / time
-    
+
     # Absolute efficiency error: σ(ε_abs) = ε_abs * sqrt((σ_rate/rate)^2 + (σ_emitted/emitted)^2)
     abs_eff = count_rate / emitted_counts
     abs_eff_err = abs_eff * np.sqrt(
-        (count_rate_err / count_rate)**2 + 
+        (count_rate_err / count_rate)**2 +
         (emitted_counts_err / emitted_counts)**2
     )
-    
     # Intrinsic efficiency error: σ(ε_int) = ε_int * sqrt((σ_rate/rate)^2 + (σ_incident/incident)^2)
     int_eff = count_rate / incident_counts
     int_eff_err = int_eff * np.sqrt(
-        (count_rate_err / count_rate)**2 + 
+        (count_rate_err / count_rate)**2 +
         (incident_counts_err / incident_counts)**2
     )
     print(f'The Absolute Efficiency of {nuclide} is {100*abs_eff:.4f}±{abs_eff_err*100:.4f}%')
