@@ -35,12 +35,13 @@ for i, name in enumerate(isotope_names):
 # """
 # Efficiency functions
 # """
-# photon_amt_Cs, cesium, cs_act_err = calc_half_life('137-Cs')
+photon_amt_Cs, cesium, cs_act_err = calc_half_life('137-Cs')
 # photon_amt_Am, amer, am_act_err = calc_half_life('241-Am')
 # photon_amt_Ba, bar, bar_act_err = calc_half_life('133-Ba')
 # photon_amt_Co, cob, cob_act_err = calc_half_life('60-Co')
 #
-# cs_intrinsic, cs_intrinsic_err = intrinsic(photon_amt_Cs,cs_act_err,5.08,16)
+cs_intrinsic, cs_intrinsic_err = intrinsic(photon_amt_Cs,cs_act_err,5.08,16)
+print(cs_intrinsic)
 #am_instrinsic = intrinsic()
 #ba_intrinsic = intrinsic()
 #co_intrinsic = intrinsic()
@@ -50,15 +51,15 @@ for i, name in enumerate(isotope_names):
 #Ba_eff = efficiency(bar, ba133['counts'],photon_amt_Ba,ba133_energy,157.25,ba_intrinsic)
 #Co_eff = efficiency(cob, co60['counts'],photon_amt_Co,co60_energy,493,co_intrinsic)
 
-# abs_eff, int_eff, abs_eff_err, int_eff_err = efficiency_uncertainty(
-#     nuclide='137-Cs',
-#     counts=cs137['counts'],
-#     energy=cs137_energy,
-#     peak_energy=288.44,                    # e.g., 15000 counts
-#     peak_counts_err=errors[3][0],            # e.g., 150 counts
-#     time=cs137['real_time'],                    # e.g., 3600 seconds
-#     emitted_counts=photon_amt_Cs,               # e.g., 50000 photons/s (total emission)
-#     emitted_counts_err=cs_act_err,       # e.g., 500 photons/s
-#     incident_counts=cs_intrinsic,               # e.g., 800 photons/s (hitting detector)
-#     incident_counts_err=cs_intrinsic_err        # e.g., 8 photons/s
-# )
+abs_eff, int_eff, abs_eff_err, int_eff_err = efficiency_uncertainty(
+    nuclide='137-Cs',
+    counts=CS137['counts'],
+    energy=cs137_energy,
+    peak_energy=288.44,                    # e.g., 15000 counts
+    peak_counts_err=errors[3][0],            # e.g., 150 counts
+    time=cs137['real_time'],                    # e.g., 3600 seconds
+    emitted_counts=photon_amt_Cs,               # e.g., 50000 photons/s (total emission)
+    emitted_counts_err=cs_act_err,       # e.g., 500 photons/s
+    incident_counts=cs_intrinsic,               # e.g., 800 photons/s (hitting detector)
+    incident_counts_err=cs_intrinsic_err        # e.g., 8 photons/s
+)

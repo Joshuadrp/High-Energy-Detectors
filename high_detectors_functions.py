@@ -300,8 +300,9 @@ def calc_half_life(nuclide, elap_time=45.88,
 
 def intrinsic(activity,activity_err,diameter ,distance):
 
-    intrinsic_rate = activity * (np.pi*(diameter/2)**2)/(4*np.pi*distance)
+    intrinsic_rate = activity * (np.pi*(diameter/2)**2)/(4*np.pi*distance**2)
     intrinsic_rate_err = activity_err * (np.pi*(diameter/2)**2)/(4*np.pi*distance**2)
+    
     return intrinsic_rate, intrinsic_rate_err
 
 
