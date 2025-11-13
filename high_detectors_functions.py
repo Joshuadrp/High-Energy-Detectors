@@ -3,6 +3,7 @@ from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
 import yaml
 import pandas as pd
+import glob
 """
 DATA LOADING FUNCTION
 """
@@ -110,9 +111,9 @@ def subtract_background(signal_data, background_data):
 
 def gaussian(x, A, mu, sigma):
     """Gaussian function"""
-    return (A / (sigma * np.sqrt(2 * np.pi))) * np.exp(-((x - mu) ** 2) / (2 * sigma ** 2))
+    return A * np.exp(-(x - mu)**2 / (2 * sigma**2))
 
-def gaussian_with_background(x, A, mu, sigma, bg):
+def gaussian_with_background(x, A, mu, sigma,bg):
     """Gaussian with background"""
     return gaussian(x, A, mu, sigma) + bg
 
@@ -125,7 +126,7 @@ def fit_peak(channels, counts, peak_channel, window=50):
     region_ch = channels[start:end]
     region_counts = counts[start:end]
 
-    A_guess = np.sum(region_counts)
+    A_guess = A_guess = np.max(region_counts) - np.min(region_counts)
     mu_guess = region_ch[np.argmax(region_counts)]
     sigma_guess = 5.0
     bg_guess = np.min(region_counts)
@@ -144,6 +145,7 @@ def fit_peak(channels, counts, peak_channel, window=50):
         'FWHM': FWHM,
         'mu_err': errors[1],
         'A': A,
+        'amp_err': errors[0],
         'bg': bg,
         'pcov': pcov,
         'region_ch': region_ch,
@@ -298,7 +300,7 @@ def calc_half_life(nuclide, elap_time=45.88,
 
     return photon_amt, nuclide, photon_amt_err
 
-def intrinsic(activity,activity_err,diameter ,distance):
+def intrinsic(activity,activity_err,diameter=5.08 ,distance=16):
 
     intrinsic_rate = activity * (np.pi*(diameter/2)**2)/(4*np.pi*distance**2)
     intrinsic_rate_err = activity_err * (np.pi*(diameter/2)**2)/(4*np.pi*distance**2)
@@ -307,18 +309,18 @@ def intrinsic(activity,activity_err,diameter ,distance):
 
 
 
-def efficiency_uncertainty(nuclide,counts, energy,peak_energy,peak_counts_err, time, 
+def efficiency_uncertainty(nuclide, peak_counts,peak_counts_err, time,
                           emitted_counts, emitted_counts_err,
                           incident_counts, incident_counts_err):
-    
-    idx = np.argmin(np.abs(energy - peak_energy))
+
+    #idx = np.argmin(np.abs(energy - peak_energy))
 
 # Get the counts at that peak
-    peak_counts = counts[idx]
+    #peak_counts = counts[idx]
     # Count rate and its uncertainty
     count_rate = peak_counts / time
     count_rate_err = peak_counts_err / time
-    
+
     # Absolute efficiency error: σ(ε_abs) = ε_abs * sqrt((σ_rate/rate)^2 + (σ_emitted/emitted)^2)
     abs_eff = count_rate / emitted_counts
     abs_eff_err = abs_eff * np.sqrt(
@@ -335,3 +337,98 @@ def efficiency_uncertainty(nuclide,counts, energy,peak_energy,peak_counts_err, t
     print(f'The Absolute Efficiency of {nuclide} is {100*abs_eff:.4f}±{abs_eff_err*100:.4f}%')
     print(f'The Intrinsic Efficiency of {nuclide} is {100*int_eff:.4f}±{int_eff_err*100:.4f}%')
     return abs_eff, int_eff, abs_eff_err, int_eff_err
+
+
+def fit_angular_response(base_path, isotope_prefix, background_data, peak_channel,
+                         window=50, on_axis_file=None):
+
+    # Get files
+    files = glob.glob(f"{base_path}/{isotope_prefix}*.Spe")
+
+    # Parse angles
+    angle_list = []
+    for f in files:
+        filename = f.split('/')[-1]  # Get just the filename
+        # Remove prefix and .Spe to get angle string
+        angle_str = filename.replace(isotope_prefix, '').replace('.Spe', '')
+        angle = int(angle_str)  # Negative sign is already in the string
+        angle_list.append((angle, f))
+
+    angle_list.sort()
+
+    # Fit peaks
+    angles = []
+    amplitudes = []
+    errors = []
+
+    # Add on-axis measurement if provided
+    if on_axis_file:
+        data = load_spe(on_axis_file)
+        data_no_bg = subtract_background(data, background_data)
+        try:
+            fit_result = fit_peak(data_no_bg['channels'], data_no_bg['counts'],
+                                 peak_channel, window)
+            time = data_no_bg['live_time']
+            count_rate = fit_result['A'] / time
+            count_rate_err = fit_result['amp_err'] / time
+            angles.append(0)
+            amplitudes.append(count_rate)
+            errors.append(count_rate_err)
+        except Exception as e:
+            print(f"Angle    0°: Fit failed - {e}")
+
+    # Fit off-axis measurements
+    for angle, filepath in angle_list:
+        data = load_spe(filepath)
+        data_no_bg = subtract_background(data, background_data)
+
+        try:
+            fit_result = fit_peak(data_no_bg['channels'], data_no_bg['counts'],
+                                 peak_channel, window)
+
+            # Normalize to counts per second using live_time
+            time = data_no_bg['live_time']
+            count_rate = fit_result['A'] / time
+            count_rate_err = fit_result['amp_err'] / time
+
+            angles.append(angle)
+            amplitudes.append(count_rate)
+            errors.append(count_rate_err)
+        except Exception as e:
+            print(f"Angle {angle:+4d}°: Fit failed - {e}")
+
+    # Sort by angle so the plot line connects correctly
+    sorted_data = sorted(zip(angles, amplitudes, errors))
+    angles = [x[0] for x in sorted_data]
+    amplitudes = [x[1] for x in sorted_data]
+    errors = [x[2] for x in sorted_data]
+
+    return {'angles': angles, 'amplitudes': amplitudes, 'errors': errors}
+
+
+def plot_angular_response(angular_data, isotope_name, energy_kev):
+    """
+    Plot peak amplitude vs angle
+
+    Parameters:
+    -----------
+    angular_data : dict
+        Output from fit_angular_response() with 'angles', 'amplitudes', 'errors'
+    isotope_name : str
+        Name for plot label (e.g., 'Cs-137')
+    energy_kev : float
+        Energy in keV for plot label
+    """
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    ax.errorbar(list(map(float, angular_data['angles'])), angular_data['amplitudes'],
+                yerr=angular_data['errors'],
+                fmt='o-', capsize=5, markersize=8, linewidth=2)
+
+    ax.set_xlabel('Angle (degrees)', fontsize=13)
+    ax.set_ylabel('Peak Count Rate (counts/s)', fontsize=13)
+    ax.set_title(f'{isotope_name} ({energy_kev} keV) Angular Response',
+                 fontsize=15, fontweight='bold')
+    ax.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.show()
