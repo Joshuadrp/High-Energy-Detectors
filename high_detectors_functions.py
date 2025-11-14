@@ -143,6 +143,7 @@ def fit_peak(channels, counts, peak_channel, window=50):
         'mu': mu,
         'sigma': sigma,
         'FWHM': FWHM,
+        'FWHM_err' : errors[2]*2.355,
         'mu_err': errors[1],
         'A': A,
         'amp_err': errors[0],
@@ -300,7 +301,7 @@ def calc_half_life(nuclide, elap_time=45.88,
 
     return photon_amt, nuclide, photon_amt_err
 
-def intrinsic(activity,activity_err,diameter=5.08 ,distance=16):
+def intrinsic(activity,activity_err,diameter,distance):
 
     intrinsic_rate = activity * (np.pi*(diameter/2)**2)/(4*np.pi*distance**2)
     intrinsic_rate_err = activity_err * (np.pi*(diameter/2)**2)/(4*np.pi*distance**2)
@@ -428,6 +429,100 @@ def plot_angular_response(angular_data, isotope_name, energy_kev):
     ax.set_xlabel('Angle (degrees)', fontsize=13)
     ax.set_ylabel('Peak Count Rate (counts/s)', fontsize=13)
     ax.set_title(f'{isotope_name} ({energy_kev} keV) Angular Response',
+                 fontsize=15, fontweight='bold')
+    ax.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.show()
+
+def fit_angular_response_FWHM(base_path, isotope_prefix, background_data, peak_channel,
+                         window=50, on_axis_file=None):
+
+    # Get files
+    files = glob.glob(f"{base_path}/{isotope_prefix}*.Spe")
+
+    # Parse angles
+    angle_list = []
+    for f in files:
+        filename = f.split('/')[-1]  # Get just the filename
+        # Remove prefix and .Spe to get angle string
+        angle_str = filename.replace(isotope_prefix, '').replace('.Spe', '')
+        angle = int(angle_str)  # Negative sign is already in the string
+        angle_list.append((angle, f))
+
+    angle_list.sort()
+
+    # Fit peaks
+    angles = []
+    FWHMs = []
+    errors = []
+
+    # Add on-axis measurement if provided
+    if on_axis_file:
+        data = load_spe(on_axis_file)
+        data_no_bg = subtract_background(data, background_data)
+        try:
+            fit_result = fit_peak(data_no_bg['channels'], data_no_bg['counts'],
+                                 peak_channel, window)
+            time = data_no_bg['live_time']
+            FWHM = fit_result['FWHM']
+            FWHM_err = fit_result['FWHM_err'] / time
+            angles.append(0)
+            FWHMs.append(FWHM)
+            errors.append(FWHM_err)
+        except Exception as e:
+            print(f"Angle    0°: Fit failed - {e}")
+
+    # Fit off-axis measurements
+    for angle, filepath in angle_list:
+        data = load_spe(filepath)
+        data_no_bg = subtract_background(data, background_data)
+
+        try:
+            fit_result = fit_peak(data_no_bg['channels'], data_no_bg['counts'],
+                                 peak_channel, window)
+
+            # Normalize to counts per second using live_time
+            time = data_no_bg['live_time']
+            FWHM = fit_result['FWHM']
+            FWHM_err = fit_result['FWHM_err']
+
+            angles.append(angle)
+            FWHMs.append(FWHM)
+            errors.append(FWHM_err)
+        except Exception as e:
+            print(f"Angle {angle:+4d}°: Fit failed - {e}")
+
+    # Sort by angle so the plot line connects correctly
+    sorted_data = sorted(zip(angles, FWHMs, errors))
+    angles = [x[0] for x in sorted_data]
+    FWHMs = [x[1] for x in sorted_data]
+    errors = [x[2] for x in sorted_data]
+
+    return {'angles': angles, 'FWHMs': FWHMs, 'errors': errors}
+
+
+def plot_angular_response_FWHM(angular_data, isotope_name, energy_kev):
+    """
+    Plot peak amplitude vs angle
+
+    Parameters:
+    -----------
+    angular_data : dict
+        Output from fit_angular_response() with 'angles', 'amplitudes', 'errors'
+    isotope_name : str
+        Name for plot label (e.g., 'Cs-137')
+    energy_kev : float
+        Energy in keV for plot label
+    """
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    ax.errorbar(list(map(float, angular_data['angles'])), angular_data['FWHMs'],
+                yerr=angular_data['errors'],
+                fmt='o-', capsize=5, markersize=8, linewidth=2)
+
+    ax.set_xlabel('Angle (degrees)', fontsize=13)
+    ax.set_ylabel('FWHM', fontsize=13)
+    ax.set_title(f'{isotope_name} ({energy_kev} keV) Angular Response of FWHM',
                  fontsize=15, fontweight='bold')
     ax.grid(True, alpha=0.3)
     plt.tight_layout()

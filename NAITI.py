@@ -46,18 +46,13 @@ photon_amt_Cs, cesium, cs_act_err = calc_half_life('137-Cs')
 photon_amt_Am, amer, am_act_err = calc_half_life('241-Am')
 photon_amt_Ba, bar, bar_act_err = calc_half_life('133-Ba')
 photon_amt_Co, cob, cob_act_err = calc_half_life('60-Co')
-#
+#intrinsic efficiency rates and errors
 cs_intrinsic, cs_intrinsic_err = intrinsic(photon_amt_Cs,cs_act_err,5.08,16)
-#print(cs_intrinsic)
-am_instrinsic, am_intrinsic_err = intrinsic(photon_amt_Am,am_act_err)
-ba_intrinsic, ba_intrinsic_err= intrinsic(photon_amt_Ba,bar_act_err)
-co_intrinsic, co_intrinsic_err = intrinsic(photon_amt_Co,cob_act_err)
+am_instrinsic, am_intrinsic_err = intrinsic(photon_amt_Am,am_act_err,5.08,16)
+ba_intrinsic, ba_intrinsic_err= intrinsic(photon_amt_Ba,bar_act_err,5.08,16)
+co_intrinsic, co_intrinsic_err = intrinsic(photon_amt_Co,cob_act_err,5.08,16)
 
-#Cs_eff = efficiency_uncertainty(cesium, cs137['counts'],photon_amt_Cs,cs137_energy,288.44,cs_intrinsic,cs137['real_time'])
-#Am_eff = efficiency_uncertainty(amer, am241['counts'],photon_amt_Am,am241_energy,28.84,am_instrinsic)
-#Ba_eff = efficiency_uncertainty(bar, ba133['counts'],photon_amt_Ba,ba133_energy,157.25,ba_intrinsic)
-#Co_eff = efficiency_uncertainty(cob, co60['counts'],photon_amt_Co,co60_energy,493,co_intrinsic)
-
+#absolute and intrinisc efficiencies and errors
 cs_abs_eff, cs_int_eff, cs_abs_eff_err, cs_int_eff_err = efficiency_uncertainty(
     nuclide='137-Cs',
     peak_counts = fits[0]['A'],                    # e.g., 15000 counts
@@ -102,8 +97,15 @@ ba_abs_eff, ba_int_eff, ba_abs_eff_err, ba_int_eff_err = efficiency_uncertainty(
     incident_counts_err=ba_intrinsic_err        # e.g., 8 photons/s
 )
 
+#off axis response
 cs_angular = fit_angular_response("Foreigners/NaITI/CS_offaxis", "CS", background, 300,on_axis_file='Foreigners/NaITI/CS137_aligned.Spe')
 plot_angular_response((cs_angular), 'cs137',661.57)
 
 Am_angular = fit_angular_response("Foreigners/NaITI/AM_offaxis", "AM", background, 50,on_axis_file='Foreigners/NaITI/AM_aligned.Spe')
 plot_angular_response((Am_angular), 'Am241',59.54)
+
+cs_angular_FWHM = fit_angular_response_FWHM("Foreigners/NaITI/CS_offaxis", "CS", background, 300,on_axis_file='Foreigners/NaITI/CS137_aligned.Spe')
+plot_angular_response_FWHM((cs_angular_FWHM), 'cs137',661.57)
+
+AM_angular_FWHM = fit_angular_response_FWHM("Foreigners/NaITI/AM_offaxis", "AM", background, 50,on_axis_file='Foreigners/NaITI/AM_aligned.Spe')
+plot_angular_response_FWHM((AM_angular_FWHM), 'AM241',59.54)
