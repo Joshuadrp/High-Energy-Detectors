@@ -42,7 +42,7 @@ for i, name in enumerate(isotope_names):
 
     print(f"{name}: {energy_fit['mu']:.2f} ± {error:.2f} keV")
 
-# ENERGY RESOLUTION - Use energy fits where they work, channel conversion for Co-60
+# ENERGY RESOLUTION
 print("\nENERGY RESOLUTION")
 resolutions = calculate_resolution(
     isotope_names,
