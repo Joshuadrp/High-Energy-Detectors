@@ -2,7 +2,7 @@ import numpy as np
 from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
 import yaml
-import pandas as pd
+
 """
 DATA LOADING FUNCTION
 """
@@ -251,60 +251,6 @@ def plot_calibration(x, y, coeffs):
     plt.title('Energy vs Channel')
     plt.legend()
     plt.show()
-
-"""
-SOURCE ACTIVITY
-"""
-
-def calc_half_life(nuclide, elap_time=45.88,
-                   isotope_file='efficiency_files/isotope_data(1).yaml',
-                   activity_file='efficiency_files/set1184_downstairs(1).dat'):
-
-    with open(isotope_file, 'r') as f:
-        content = f.read()
-    isotopes = [yaml.safe_load('Isotope:' + section)
-                for section in content.split('Isotope:')[1:]]
-
-    for isotope in isotopes:
-        half_life = isotope['Half-life']
-        if isinstance(half_life, str):
-            half_life = half_life.replace('years', '').replace('year', '').strip()
-            isotope['Half-life'] = float(half_life)
-
-    isotope_dict = {isotope['Isotope']: isotope for isotope in isotopes}
-    half_life_dict = {iso['Isotope']: iso['Half-life'] for iso in isotopes}
-
-    # Also create reversed format dict (60-Co -> Co-60)
-    reversed_half_life = {}
-    for key in half_life_dict:
-        parts = key.split('-')
-        reversed_key = f"{parts[1]}-{parts[0]}"
-        reversed_half_life[reversed_key] = half_life_dict[key]
-
-    df = pd.read_csv(activity_file)
-    nuclide_activity = {}
-    for index, row in df.iterrows():
-        key = str(row.iloc[0]).strip()
-        nuclide_activity[key] = row.iloc[3]
-    nuclide_activity_uncert = {}
-    for index, row in df.iterrows():
-        key = str(row.iloc[0]).strip()
-        nuclide_activity_uncert[key] = row.iloc[4]
-
-    curie_amt = nuclide_activity[nuclide]*(1/2)**(elap_time/reversed_half_life[nuclide])
-    photon_amt = curie_amt*37000
-
-    curie_amt_err = nuclide_activity_uncert[nuclide] *(1/2)**(elap_time/reversed_half_life[nuclide])
-    photon_amt_err = curie_amt_err * 37000
-
-    print(f'--- {nuclide} ACTIVITY AND HALFLIFE ---')
-    print(f'{curie_amt:.2f} is the current activity in uCi')
-    print(f'{photon_amt:.2f} is the photons per second given the activity')
-    print(f'Photon emission uncertainty: ±{photon_amt_err:.2f} photons/s')
-    print(f'Half life of {nuclide} is {reversed_half_life[nuclide]} years')
-
-    return photon_amt, nuclide, photon_amt_err
-
 
 """
 ENERGY RESOLUTION

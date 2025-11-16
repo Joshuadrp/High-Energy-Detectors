@@ -53,7 +53,7 @@ resolutions = calculate_resolution(
     use_channel_conversion=['CO60']
 )
 # Plot Resolution vs Energy
-plot_resolution_vs_energy(resolutions, detector_name='NaI')
+plot_resolution_vs_energy(resolutions, detector_name='NaITI')
 
 # Fit the resolution curve: R² = aE⁻² + bE⁻¹ + c
 a, b_coeff, c, fit_errors = fit_resolution_curve(resolutions)
