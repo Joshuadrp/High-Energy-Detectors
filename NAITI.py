@@ -47,10 +47,11 @@ photon_amt_Am, amer, am_act_err = calc_half_life('241-Am')
 photon_amt_Ba, bar, bar_act_err = calc_half_life('133-Ba')
 photon_amt_Co, cob, cob_act_err = calc_half_life('60-Co')
 #intrinsic efficiency rates and errors
-cs_intrinsic, cs_intrinsic_err = intrinsic(photon_amt_Cs,cs_act_err,5.08,16)
-am_instrinsic, am_intrinsic_err = intrinsic(photon_amt_Am,am_act_err,5.08,16)
-ba_intrinsic, ba_intrinsic_err= intrinsic(photon_amt_Ba,bar_act_err,5.08,16)
-co_intrinsic, co_intrinsic_err = intrinsic(photon_amt_Co,cob_act_err,5.08,16)
+NAITI_detector_parameters = (5.08, 16)
+cs_intrinsic, cs_intrinsic_err = intrinsic(photon_amt_Cs,cs_act_err,*NAITI_detector_parameters)
+am_instrinsic, am_intrinsic_err = intrinsic(photon_amt_Am,am_act_err,*NAITI_detector_parameters)
+ba_intrinsic, ba_intrinsic_err= intrinsic(photon_amt_Ba,bar_act_err,*NAITI_detector_parameters)
+co_intrinsic, co_intrinsic_err = intrinsic(photon_amt_Co,cob_act_err,*NAITI_detector_parameters)
 
 #absolute and intrinisc efficiencies and errors
 cs_abs_eff, cs_int_eff, cs_abs_eff_err, cs_int_eff_err = efficiency_uncertainty(

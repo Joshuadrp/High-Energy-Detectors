@@ -153,26 +153,9 @@ def fit_peak(channels, counts, peak_channel, window=50):
         'region_counts': region_counts,
         'fitted_curve': gaussian_with_background(region_ch, A, mu, sigma, bg)
     }
-
-
-"""
-UNCERTAINTIES
-"""
-
-def propagate_energy_uncertainty(channel, channel_err, m, b, m_err, b_err):
-    """Propagate uncertainty from channel to energy"""
-    energy_err = np.sqrt(
-        (m * channel_err) ** 2 +
-        (channel * m_err) ** 2 +
-        b_err ** 2
-    )
-    return energy_err
-
 """
 CALIBRATION
 """
-
-
 def calibrate(yaml_file):
     with open(yaml_file) as f:
         content = f.read()
@@ -190,11 +173,17 @@ def calibrate(yaml_file):
 def energy_calibration_equation(c1, channel, c0):
     return c1 * channel + c0
 
+def propagate_energy_uncertainty(channel, channel_err, m, b, m_err, b_err):
+    """Propagate uncertainty from channel to energy"""
+    energy_err = np.sqrt(
+        (m * channel_err) ** 2 +
+        (channel * m_err) ** 2 +
+        b_err ** 2
+    )
+    return energy_err
 """
 PLOT FUNCTIONS
 """
-
-
 def plot_spectrum_with_fit(data, title, peak_channel, window=50):
     """Plot spectrum with Gaussian fit"""
     fit_result = fit_peak(data['channels'], data['counts'], peak_channel, window)
@@ -339,7 +328,9 @@ def efficiency_uncertainty(nuclide, peak_counts,peak_counts_err, time,
     print(f'The Intrinsic Efficiency of {nuclide} is {100*int_eff:.4f}±{int_eff_err*100:.4f}%')
     return abs_eff, int_eff, abs_eff_err, int_eff_err
 
-
+"""
+Off-Axis Response
+"""
 def fit_angular_response(base_path, isotope_prefix, background_data, peak_channel,
                          window=50, on_axis_file=None):
 
