@@ -20,7 +20,7 @@ for i, name in enumerate(isotope_names):
     print(f"{name}: {fit['mu']:.2f} ± {fit['mu_err']:.2f}")
     print(f"{name}: {fit['A']}")
 # Calibration
-x, y, coeffs, m, b, m_uncert, b_uncert = calibrate("Foreigners/NaITI/NaITI.yaml")
+x, y, coeffs, m, b, m_uncert, b_uncert = calibrate("Foreigners/BGO/BGO.yaml")
 plot_calibration(x, y, coeffs)
 
 # Convert to energy and plot
