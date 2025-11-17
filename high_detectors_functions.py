@@ -11,26 +11,62 @@ def load_spe(filepath):
 
     # Check file extension
     if filepath.endswith('.mca'):
-        # Binary format - CdTe detector
-        try:
-            counts = np.fromfile(filepath, dtype=np.uint32)
-            counts = counts[128:]  # Skip header
-        except:
-            counts = np.fromfile(filepath, dtype=np.uint16)
-            counts = counts[256:]
-
-        channels = np.arange(len(counts))
-
-        return {
-            'channels': channels,
-            'counts': counts,
+        # PMCA text format - CdTe detector
+        metadata = {
             'filename': filepath.split('/')[-1],
             'detector': 'CdTe',
             'live_time': None,
             'real_time': None,
         }
 
-    # ASCII format - .spe files (NaI/BGO)
+        counts = []
+        IS_DATA = False
+
+        # Open with latin-1 encoding (or just 'r' like file_parser)
+        with open(filepath, "r", encoding='latin-1') as file:
+            for line in file:
+                line = line.strip()
+
+                # Data section
+                if line.startswith('<<DATA>>'):
+                    IS_DATA = True
+                    continue
+                elif line.startswith('REAL_TIME'):
+                    # Use the file_parser approach
+                    metadata['real_time'] = float(line[12:])  # Skip "REAL_TIME - "
+                    IS_DATA = False
+                elif line.startswith('LIVE_TIME'):
+                    # file_parser doesn't have this, but keep it
+                    metadata['live_time'] = float(line[12:])  # Skip "LIVE_TIME - "
+                    IS_DATA = False
+                elif line.startswith('START_TIME'):
+                    # Extract date if needed (file_parser uses this for DATE_MEAS)
+                    # metadata['date'] = line[13:]  # Uncomment if you want date
+                    IS_DATA = False
+                elif line.startswith("<<END>>"):
+                    IS_DATA = False
+                    break
+
+                # Collect data (file_parser uses int, not float)
+                if IS_DATA:
+                    try:
+                        counts.append(int(line))  # Changed from float to int
+                    except Exception:
+                        continue
+
+        channels = np.arange(len(counts))
+        counts = np.array(counts)
+
+        return {
+            'channels': channels,
+            'counts': counts,
+            'filename': metadata['filename'],
+            'detector': metadata['detector'],
+            'live_time': metadata['live_time'],
+            'real_time': metadata['real_time'],
+        }
+
+    # ASCII format - .spe files (NaI/BGO) - KEEP YOUR EXISTING CODE
     with open(filepath, 'r') as f:
         lines = f.readlines()
 
@@ -78,10 +114,10 @@ def load_spe(filepath):
         'real_time': metadata['real_time'],
     }
 
+
 """
 PEAK FITTING
 """
-
 
 def subtract_background(signal_data, background_data):
     """Subtract background spectrum from signal spectrum"""
