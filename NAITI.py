@@ -99,14 +99,14 @@ ba_abs_eff, ba_int_eff, ba_abs_eff_err, ba_int_eff_err = efficiency_uncertainty(
 )
 
 #off axis response
-cs_angular = fit_angular_response("Foreigners/NaITI/CS_offaxis", "CS", background, 300,on_axis_file='Foreigners/NaITI/CS137_aligned.Spe')
-plot_angular_response((cs_angular), 'cs137',661.57)
+cs_angular = fit_off_axis_response("Foreigners/NaITI/CS_offaxis", "CS", background, 300,on_axis_file='Foreigners/NaITI/CS137_aligned.Spe')
+plot_off_axis_response((cs_angular), 'cs137',661.57)
 
-Am_angular = fit_angular_response("Foreigners/NaITI/AM_offaxis", "AM", background, 50,on_axis_file='Foreigners/NaITI/AM_aligned.Spe')
-plot_angular_response((Am_angular), 'Am241',59.54)
+Am_angular = fit_off_axis_response("Foreigners/NaITI/AM_offaxis", "AM", background, 50,on_axis_file='Foreigners/NaITI/AM_aligned.Spe')
+plot_off_axis_response((Am_angular), 'Am241',59.54)
 
-cs_angular_FWHM = fit_angular_response_FWHM("Foreigners/NaITI/CS_offaxis", "CS", background, 300,on_axis_file='Foreigners/NaITI/CS137_aligned.Spe')
-plot_angular_response_FWHM((cs_angular_FWHM), 'cs137',661.57)
+cs_angular_FWHM = fit_off_axis_response_FWHM("Foreigners/NaITI/CS_offaxis", "CS", background, 300,on_axis_file='Foreigners/NaITI/CS137_aligned.Spe')
+plot_off_axis_response_FWHM((cs_angular_FWHM), 'cs137',661.57)
 
-AM_angular_FWHM = fit_angular_response_FWHM("Foreigners/NaITI/AM_offaxis", "AM", background, 50,on_axis_file='Foreigners/NaITI/AM_aligned.Spe')
-plot_angular_response_FWHM((AM_angular_FWHM), 'AM241',59.54)
+AM_angular_FWHM = fit_off_axis_response_FWHM("Foreigners/NaITI/AM_offaxis", "AM", background, 50,on_axis_file='Foreigners/NaITI/AM_aligned.Spe')
+plot_off_axis_response_FWHM((AM_angular_FWHM), 'AM241',59.54)

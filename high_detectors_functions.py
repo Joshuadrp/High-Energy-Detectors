@@ -331,7 +331,7 @@ def efficiency_uncertainty(nuclide, peak_counts,peak_counts_err, time,
 """
 Off-Axis Response
 """
-def fit_angular_response(base_path, isotope_prefix, background_data, peak_channel,
+def fit_off_axis_response(base_path, isotope_prefix, background_data, peak_channel,
                          window=50, on_axis_file=None):
 
     # Get files
@@ -398,7 +398,7 @@ def fit_angular_response(base_path, isotope_prefix, background_data, peak_channe
     return {'angles': angles, 'amplitudes': amplitudes, 'errors': errors}
 
 
-def plot_angular_response(angular_data, isotope_name, energy_kev):
+def plot_off_axis_response(angular_data, isotope_name, energy_kev):
     """
     Plot peak amplitude vs angle
 
@@ -425,7 +425,7 @@ def plot_angular_response(angular_data, isotope_name, energy_kev):
     plt.tight_layout()
     plt.show()
 
-def fit_angular_response_FWHM(base_path, isotope_prefix, background_data, peak_channel,
+def fit_off_axis_response_FWHM(base_path, isotope_prefix, background_data, peak_channel,
                          window=50, on_axis_file=None):
 
     # Get files
@@ -492,7 +492,7 @@ def fit_angular_response_FWHM(base_path, isotope_prefix, background_data, peak_c
     return {'angles': angles, 'FWHMs': FWHMs, 'errors': errors}
 
 
-def plot_angular_response_FWHM(angular_data, isotope_name, energy_kev):
+def plot_off_axis_response_FWHM(angular_data, isotope_name, energy_kev):
     """
     Plot peak amplitude vs angle
 
