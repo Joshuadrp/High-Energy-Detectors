@@ -103,12 +103,10 @@ intrinsic_efficiencies = [am_int_eff, ba_int_eff, cs_int_eff, co_int_eff]
 intrinsic_eff_errors = [am_int_eff_err, ba_int_eff_err, cs_int_eff_err, co_int_eff_err]
 
 # Fit the logarithmic polynomial (Equation 20)
-fit_result = fit_intrinsic_efficiency(energies, intrinsic_efficiencies, 
-                                       intrinsic_eff_errors, degree=2)
+intrinsic_result = fit_intrinsic_efficiency(energies, intrinsic_efficiencies, degree=2)
 
 # Plot the data with the fit on log-log axes
-plot_intrinsic_efficiency(energies, intrinsic_efficiencies, intrinsic_eff_errors, 
-                          fit_result, title='NaI(Tl) Intrinsic Peak Efficiency vs Energy')
+plot_intrinsic_efficiency(energies, intrinsic_efficiencies, intrinsic_eff_errors, intrinsic_result, title='NaITl Intrinsic Peak Efficiency vs Energy')
 #off axis response
 cs_angular = fit_off_axis_response("Foreigners/NaITI/CS_offaxis", "CS", background, 300,on_axis_file='Foreigners/NaITI/CS137_aligned.Spe')
 plot_off_axis_response((cs_angular), 'cs137',661.57)

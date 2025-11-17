@@ -329,33 +329,7 @@ def efficiency_uncertainty(nuclide, peak_counts,peak_counts_err, time,
     return abs_eff, int_eff, abs_eff_err, int_eff_err
 
 
-def fit_intrinsic_efficiency(energies, intrinsic_efficiencies, intrinsic_eff_errors=None, degree=2):
-    """
-    Fit intrinsic peak efficiency vs energy using logarithmic polynomial.
-
-    The intrinsic peak efficiency is described by:
-    ln(ε_p) = a + b*ln(E) + c*(ln(E))^2
-
-    Parameters:
-    -----------
-    energies : array-like
-        Photon energies in keV
-    intrinsic_efficiencies : array-like
-        Intrinsic peak efficiencies (as fractions, not percentages)
-    intrinsic_eff_errors : array-like, optional
-        Uncertainties in intrinsic efficiencies
-    degree : int, optional
-        Polynomial degree (default 2 for quadratic fit)
-
-    Returns:
-    --------
-    dict containing:
-        'coeffs': polynomial coefficients [c, b, a] for ln(ε) = a + b*ln(E) + c*(ln(E))^2
-        'pcov': covariance matrix
-        'log_E': ln(E) values used for fitting
-        'log_eff': ln(ε) values used for fitting
-        'fit_func': function to evaluate fit at any energy
-    """
+def fit_intrinsic_efficiency(energies, intrinsic_efficiencies, degree=2):
     # Convert to numpy arrays
     energies = np.array(energies)
     intrinsic_efficiencies = np.array(intrinsic_efficiencies)
@@ -365,19 +339,8 @@ def fit_intrinsic_efficiency(energies, intrinsic_efficiencies, intrinsic_eff_err
     log_eff = np.log(intrinsic_efficiencies)
 
     # Calculate weights if errors are provided
-    if intrinsic_eff_errors is not None:
-        intrinsic_eff_errors = np.array(intrinsic_eff_errors)
-        # Propagate errors: σ(ln(ε)) ≈ σ(ε)/ε
-        log_eff_errors = intrinsic_eff_errors / intrinsic_efficiencies
-        weights = 1.0 / log_eff_errors**2
-    else:
-        weights = None
-
-    # Fit polynomial to log(eff) vs log(E)
-    if weights is not None:
-        coeffs, pcov = np.polyfit(log_E, log_eff, degree, w=weights, cov=True)
-    else:
-        coeffs, pcov = np.polyfit(log_E, log_eff, degree, cov=True)
+    
+    coeffs, pcov = np.polyfit(log_E, log_eff, degree, cov=True)
 
     # Create fit function
     def fit_func(E):
@@ -410,22 +373,7 @@ def fit_intrinsic_efficiency(energies, intrinsic_efficiencies, intrinsic_eff_err
 
 def plot_intrinsic_efficiency(energies, intrinsic_efficiencies, intrinsic_eff_errors=None,
                                fit_result=None, title='Intrinsic Peak Efficiency vs Energy'):
-    """
-    Plot intrinsic efficiency vs energy on log-log axes with optional fit.
-
-    Parameters:
-    -----------
-    energies : array-like
-        Photon energies in keV
-    intrinsic_efficiencies : array-like
-        Intrinsic peak efficiencies (as fractions, not percentages)
-    intrinsic_eff_errors : array-like, optional
-        Uncertainties in intrinsic efficiencies
-    fit_result : dict, optional
-        Output from fit_intrinsic_efficiency()
-    title : str, optional
-        Plot title
-    """
+    
     fig, ax = plt.subplots(figsize=(10, 7))
 
     # Plot data points

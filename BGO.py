@@ -98,6 +98,16 @@ ba_abs_eff, ba_int_eff, ba_abs_eff_err, ba_int_eff_err = efficiency_uncertainty(
     incident_counts_err=ba_intrinsic_err        
 )
 
+energies = [59.5, 356, 662, 1173]  # keV (Am, Ba, Cs, Co)
+intrinsic_efficiencies = [am_int_eff, ba_int_eff, cs_int_eff, co_int_eff]
+intrinsic_eff_errors = [am_int_eff_err, ba_int_eff_err, cs_int_eff_err, co_int_eff_err]
+
+# Fit the logarithmic polynomial (Equation 20)
+intrinsic_result = fit_intrinsic_efficiency(energies, intrinsic_efficiencies, degree=2)
+
+# Plot the data with the fit on log-log axes
+plot_intrinsic_efficiency(energies, intrinsic_efficiencies, intrinsic_eff_errors, intrinsic_result, title='NaITl Intrinsic Peak Efficiency vs Energy')
+
 
 cs_angular = fit_off_axis_response("Foreigners/BGO/CS_offaxis", "Cs", background, 300,on_axis_file='Foreigners/BGO/CS137_aligned.Spe')
 plot_off_axis_response((cs_angular), 'CS137',661.57)
