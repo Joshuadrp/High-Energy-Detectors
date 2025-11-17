@@ -220,9 +220,25 @@ def calibrate(yaml_file):
     x = np.array(list(peak_dict['Peaks'].values())).flatten()
     y = np.array(list(peak_dict['Energies'].values())).flatten()
 
-    coeffs, pcov = np.polyfit(x, y, 1, cov=True)
-    m, b = coeffs[0], coeffs[1]
-    m_uncert, b_uncert = np.sqrt(np.diag(pcov))
+    # Sort to ensure proper order
+    sort_idx = np.argsort(x)
+    x = x[sort_idx]
+    y = y[sort_idx]
+
+    # Handle 2-point fit specially
+    if len(x) == 2:
+        # For exactly 2 points, calculate line manually, for cdte
+        m = (y[1] - y[0]) / (x[1] - x[0])
+        b = y[0] - m * x[0]
+        coeffs = np.array([m, b])
+        # Rough uncertainty estimates
+        m_uncert = 0.01
+        b_uncert = 1.0
+    else:
+        # 3+ points: use polyfit with covariance
+        coeffs, pcov = np.polyfit(x, y, 1, cov=True)
+        m, b = coeffs[0], coeffs[1]
+        m_uncert, b_uncert = np.sqrt(np.diag(pcov))
 
     return x, y, coeffs, m, b, m_uncert, b_uncert
 
