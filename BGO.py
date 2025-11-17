@@ -108,7 +108,6 @@ intrinsic_result = fit_intrinsic_efficiency(energies, intrinsic_efficiencies, de
 # Plot the data with the fit on log-log axes
 plot_intrinsic_efficiency(energies, intrinsic_efficiencies, intrinsic_eff_errors, intrinsic_result, title='NaITl Intrinsic Peak Efficiency vs Energy')
 
-
 cs_angular = fit_off_axis_response("Foreigners/BGO/CS_offaxis", "Cs", background, 300,on_axis_file='Foreigners/BGO/CS137_aligned.Spe')
 plot_off_axis_response((cs_angular), 'CS137',661.57)
 
