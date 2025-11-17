@@ -296,6 +296,60 @@ def plot_calibration(x, y, coeffs):
     plt.title('Energy vs Channel')
     plt.legend()
     plt.show()
+"""
+SOURCE ACTIVITY
+"""
+
+def calc_half_life(nuclide, elap_time=45.88, 
+                   isotope_file='efficiency_files/isotope_data(1).yaml',
+                   activity_file='efficiency_files/set1184_downstairs(1).dat'):
+    
+    with open(isotope_file, 'r') as f:
+        content = f.read()
+    isotopes = [yaml.safe_load('Isotope:' + section) 
+                for section in content.split('Isotope:')[1:]]
+    
+    for isotope in isotopes:
+        half_life = isotope['Half-life']
+        if isinstance(half_life, str):
+            half_life = half_life.replace('years', '').replace('year', '').strip()
+            isotope['Half-life'] = float(half_life)
+    
+    isotope_dict = {isotope['Isotope']: isotope for isotope in isotopes}
+    half_life_dict = {iso['Isotope']: iso['Half-life'] for iso in isotopes}
+    
+    # Also create reversed format dict (60-Co -> Co-60)
+    reversed_half_life = {}
+    for key in half_life_dict:
+        parts = key.split('-')
+        reversed_key = f"{parts[1]}-{parts[0]}"
+        reversed_half_life[reversed_key] = half_life_dict[key]
+    
+    df = pd.read_csv(activity_file)
+    nuclide_activity = {}
+    for index, row in df.iterrows():
+        key = str(row.iloc[0]).strip()
+        nuclide_activity[key] = row.iloc[3]
+    nuclide_activity_uncert = {}
+    for index, row in df.iterrows():
+        key = str(row.iloc[0]).strip()
+        nuclide_activity_uncert[key] = row.iloc[4]
+    
+    curie_amt = nuclide_activity[nuclide]*(1/2)**(elap_time/reversed_half_life[nuclide])
+    photon_amt = curie_amt*37000
+    
+    curie_amt_err = nuclide_activity_uncert[nuclide] *(1/2)**(elap_time/reversed_half_life[nuclide])
+    photon_amt_err = curie_amt_err * 37000
+    
+    print(f'--- {nuclide} ACTIVITY AND HALFLIFE ---')
+    print(f'{curie_amt:.2f} is the current activity in uCi')
+    print(f'{photon_amt:.2f} is the photons per second given the activity')
+    print(f'Photon emission uncertainty: ±{photon_amt_err:.2f} photons/s')
+    print(f'Half life of {nuclide} is {reversed_half_life[nuclide]} years')
+
+    return photon_amt, nuclide, photon_amt_err
+
+
 
 """
 ENERGY RESOLUTION
@@ -345,7 +399,7 @@ def calculate_resolution(isotope_names, fits, energy_fits, m, b, known_energies,
     return resolutions
 
 
-def plot_resolution_vs_energy(resolutions, detector_name='NaI'):
+def plot_resolution_vs_energy(resolutions, detector_name):
     """
     Plot energy resolution as a function of energy
 
@@ -475,8 +529,7 @@ def efficiency_uncertainty(nuclide, peak_counts,peak_counts_err, time,
     print(f'The Intrinsic Efficiency of {nuclide} is {100*int_eff:.4f}±{int_eff_err*100:.4f}%')
     return abs_eff, int_eff, abs_eff_err, int_eff_err
 
-
-def fit_intrinsic_efficiency(energies, intrinsic_efficiencies, degree=2):
+def fit_intrinsic_efficiency(energies, intrinsic_efficiencies, degree=1):
     # Convert to numpy arrays
     energies = np.array(energies)
     intrinsic_efficiencies = np.array(intrinsic_efficiencies)
@@ -517,7 +570,6 @@ def fit_intrinsic_efficiency(energies, intrinsic_efficiencies, degree=2):
         'fit_func': fit_func
     }
 
-
 def plot_intrinsic_efficiency(energies, intrinsic_efficiencies, intrinsic_eff_errors=None,
                                fit_result=None, title='Intrinsic Peak Efficiency vs Energy'):
     
@@ -556,15 +608,16 @@ Off-Axis Response
 def fit_off_axis_response(base_path, isotope_prefix, background_data, peak_channel,
                          window=50, on_axis_file=None):
 
-    # Get files
+    # Get files - check for both .Spe and .mca extensions
     files = glob.glob(f"{base_path}/{isotope_prefix}*.Spe")
+    files += glob.glob(f"{base_path}/{isotope_prefix}*.mca")
 
     # Parse angles
     angle_list = []
     for f in files:
         filename = f.split('/')[-1]  # Get just the filename
-        # Remove prefix and .Spe to get angle string
-        angle_str = filename.replace(isotope_prefix, '').replace('.Spe', '')
+        # Remove prefix and extension (.Spe or .mca) to get angle string
+        angle_str = filename.replace(isotope_prefix, '').replace('.Spe', '').replace('.mca', '')
         angle = int(angle_str)  # Negative sign is already in the string
         angle_list.append((angle, f))
 
@@ -650,15 +703,16 @@ def plot_off_axis_response(angular_data, isotope_name, energy_kev):
 def fit_off_axis_response_FWHM(base_path, isotope_prefix, background_data, peak_channel,
                          window=50, on_axis_file=None):
 
-    # Get files
+    # Get files - check for both .Spe and .mca extensions
     files = glob.glob(f"{base_path}/{isotope_prefix}*.Spe")
+    files += glob.glob(f"{base_path}/{isotope_prefix}*.mca")
 
     # Parse angles
     angle_list = []
     for f in files:
         filename = f.split('/')[-1]  # Get just the filename
-        # Remove prefix and .Spe to get angle string
-        angle_str = filename.replace(isotope_prefix, '').replace('.Spe', '')
+        # Remove prefix and extension (.Spe or .mca) to get angle string
+        angle_str = filename.replace(isotope_prefix, '').replace('.Spe', '').replace('.mca', '')
         angle = int(angle_str)  # Negative sign is already in the string
         angle_list.append((angle, f))
 
