@@ -60,3 +60,4 @@ a, b_coeff, c, fit_errors = fit_resolution_curve(resolutions)
 
 
 
+

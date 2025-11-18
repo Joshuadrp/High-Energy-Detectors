@@ -1,9 +1,9 @@
 from high_detectors_functions import *
 
 base_path = "Foreigners/CDTE"
-isotope_names = ['CS137', 'AM']
-peak_channels = [639, 412]
-known_energies = [662, 384]
+isotope_names = ['CS137', 'AM', 'BA']
+peak_channels = [639, 420, 213]
+known_energies = [662, 59.5, 356]
 
 # Load data
 data = [load_spe(f"{base_path}/{name}_aligned.mca") for name in isotope_names]
@@ -11,7 +11,6 @@ background = load_spe(f"{base_path}/BACKGROUND.mca")
 
 # Subtract background
 data_no_bg = [subtract_background(d, background) for d in data]
-
 
 # Fit peaks
 fits = []
@@ -36,7 +35,7 @@ for i, name in enumerate(isotope_names):
 
     energy_fit = plot_spectrum_with_fit_energy(energy, data_no_bg[i]['counts'],
                                                name, peak_energy_estimate,
-                                               window=100)
+                                               window=50)
     energy_fits.append(energy_fit)
     error = propagate_energy_uncertainty(fits[i]['mu'], fits[i]['mu_err'],
                                          m, b, m_uncert, b_uncert)
@@ -55,5 +54,5 @@ resolutions = calculate_resolution(
 # Plot Resolution vs Energy
 plot_resolution_vs_energy(resolutions, detector_name='CDTE')
 
-
-
+# Fit the resolution curve: R² = aE⁻² + bE⁻¹ + c
+a, b_coeff, c, fit_errors = fit_resolution_curve(resolutions)
