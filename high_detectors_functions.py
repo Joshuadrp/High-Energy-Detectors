@@ -552,15 +552,10 @@ def fit_intrinsic_efficiency(energies, intrinsic_efficiencies, degree=1):
     # Print fit parameters
     if degree == 2:
         c, b, a = coeffs
-        print(f"\nIntrinsic Efficiency Fit: ln(ε_p) = a + b*ln(E) + c*(ln(E))^2")
-        print(f"a = {a:.6f} ± {np.sqrt(pcov[2,2]):.6f}")
-        print(f"b = {b:.6f} ± {np.sqrt(pcov[1,1]):.6f}")
-        print(f"c = {c:.6f} ± {np.sqrt(pcov[0,0]):.6f}")
+       
     elif degree == 1:
         b, a = coeffs
-        print(f"\nIntrinsic Efficiency Fit: ln(ε_p) = a + b*ln(E)")
-        print(f"a = {a:.6f} ± {np.sqrt(pcov[1,1]):.6f}")
-        print(f"b = {b:.6f} ± {np.sqrt(pcov[0,0]):.6f}")
+        
 
     return {
         'coeffs': coeffs,
@@ -635,7 +630,7 @@ def fit_off_axis_response(base_path, isotope_prefix, background_data, peak_chann
         try:
             fit_result = fit_peak(data_no_bg['channels'], data_no_bg['counts'],
                                  peak_channel, window)
-            time = data_no_bg['live_time']
+            time = data_no_bg['real_time']
             count_rate = fit_result['A'] / time
             count_rate_err = fit_result['amp_err'] / time
             angles.append(0)
@@ -654,7 +649,7 @@ def fit_off_axis_response(base_path, isotope_prefix, background_data, peak_chann
                                  peak_channel, window)
 
             # Normalize to counts per second using live_time
-            time = data_no_bg['live_time']
+            time = data_no_bg['real_time']
             count_rate = fit_result['A'] / time
             count_rate_err = fit_result['amp_err'] / time
 
@@ -730,7 +725,7 @@ def fit_off_axis_response_FWHM(base_path, isotope_prefix, background_data, peak_
         try:
             fit_result = fit_peak(data_no_bg['channels'], data_no_bg['counts'],
                                  peak_channel, window)
-            time = data_no_bg['live_time']
+            time = data_no_bg['real_time']
             FWHM = fit_result['FWHM']
             FWHM_err = fit_result['FWHM_err'] / time
             angles.append(0)
@@ -749,7 +744,7 @@ def fit_off_axis_response_FWHM(base_path, isotope_prefix, background_data, peak_
                                  peak_channel, window)
 
             # Normalize to counts per second using live_time
-            time = data_no_bg['live_time']
+            time = data_no_bg['real_time']
             FWHM = fit_result['FWHM']
             FWHM_err = fit_result['FWHM_err']
 
@@ -764,7 +759,7 @@ def fit_off_axis_response_FWHM(base_path, isotope_prefix, background_data, peak_
     angles = [x[0] for x in sorted_data]
     FWHMs = [x[1] for x in sorted_data]
     errors = [x[2] for x in sorted_data]
-
+    
     return {'angles': angles, 'FWHMs': FWHMs, 'errors': errors}
 
 
