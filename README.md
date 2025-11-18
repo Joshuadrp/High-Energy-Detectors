@@ -82,11 +82,22 @@ pip install numpy scipy matplotlib yaml pandas glob
 cd path/to/High-Energy-Detectors-josh2ari
 ```
 
-4. **Run analysis for a detector:**
+4. **Run main program:**
 ```
-python NAITI.py    
-python BGO.py      
-python CDTE.py  
+python main.py
+```
+5. **Run analysis for the desired detector after running main**
+```
+GAMMA-RAY DETECTOR ANALYSIS
+
+Select a detector to analyze:
+
+  1. NAITI(Thallium-doped Sodium Iodide)
+  2. BGO (Bismuth Germanate)
+  3. CdTe (Cadmium Telluride)
+  4. Exit
+
+Enter your choice (1-4): 1
 ```
 
 ---
@@ -118,7 +129,8 @@ High-Energy-Detectors-josh2ari/
 ├── high_detectors_functions.py     
 ├── BGO.py                          
 ├── CDTE.py                         
-├── NAITI.py                             
+├── NAITI.py
+├── main.py                         #File that runs the project             
 └── README.md                      
 ```
 ---
