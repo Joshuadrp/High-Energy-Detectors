@@ -42,13 +42,12 @@ Built for the **Space Detector Laboratory** course, it provides a complete analy
 #### **Efficiency Analysis**
 - **Intrinsic efficiency**: Fraction of incident photons detected
 - **Absolute efficiency**: Fraction of emitted photons detected
-- Logarithmic polynomial fitting: ln ε = a + b ln E + c(ln E)²
+- Logarithmic polynomial fitting for intrinsinc efficiency: ln ε = a + b ln E + c(ln E)²
 - Full error propagation through all calculations
 
 #### **Angular Response**
 - Off-axis response characterization (peak amplitude vs angle)
 - FWHM variation with detector angle
-- Normalization to on-axis measurements
 
 *Note: Co-60 excluded from CdTe analysis due to low detection efficiency at high energies*
 
@@ -143,5 +142,5 @@ This repository contains the analysis code and data pipeline used to generate th
 
 - **Space Detector Laboratory** professors Andrew and Morgan, for guidance and laboratory resources
 - Team members for collaborative data collection and analysis
-- Claude (Anthropic) for assistance with certain debugging, and for energy resolution and efficiency 
-clarification and functions example usage
+- Claude (Anthropic) for assistance with certain debugging, and for energy resolution, efficiency and off-axis 
+  clarification and functions example usage
