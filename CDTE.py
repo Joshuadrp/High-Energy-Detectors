@@ -129,4 +129,3 @@ plot_off_axis_response((ba_angular), 'Ba133',276)
 
 ba_angular_FWHM = fit_off_axis_response_FWHM("Foreigners/CDTE/Ba_offaxis", "Ba", background, 213,on_axis_file='Foreigners/CDTE/BA_aligned.mca')
 plot_off_axis_response_FWHM((ba_angular_FWHM), 'Ba133',276)
-print(ba_angular_FWHM['FWHMs'])
