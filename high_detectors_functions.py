@@ -4,15 +4,15 @@ import matplotlib.pyplot as plt
 import yaml
 import pandas as pd
 import glob
-"""
-DATA LOADING FUNCTION
-"""
+
 def load_spe(filepath):
-    """Load .spe (NaI/BGO) or .mca (CdTe) file and return spectrum with metadata"""
+    """
+    Load .spe (NaI/BGO) or .mca (CdTe) file 
+    and return spectrum with metadata
+    """
 
     # Check file extension
     if filepath.endswith('.mca'):
-        # PMCA text format - CdTe detector
         metadata = {
             'filename': filepath.split('/')[-1],
             'detector': 'CdTe',
@@ -34,15 +34,14 @@ def load_spe(filepath):
                     continue
                 elif line.startswith('REAL_TIME'):
                     # Use the file_parser approach
-                    metadata['real_time'] = float(line[12:])  # Skip "REAL_TIME - "
+                    metadata['real_time'] = float(line[12:])
                     IS_DATA = False
                 elif line.startswith('LIVE_TIME'):
-                    # file_parser doesn't have this, but keep it
-                    metadata['live_time'] = float(line[12:])  # Skip "LIVE_TIME - "
+                    metadata['live_time'] = float(line[12:]) 
                     IS_DATA = False
                 elif line.startswith('START_TIME'):
                     # Extract date if needed (file_parser uses this for DATE_MEAS)
-                    # metadata['date'] = line[13:]  # Uncomment if you want date
+                    
                     IS_DATA = False
                 elif line.startswith("<<END>>"):
                     IS_DATA = False
@@ -51,7 +50,7 @@ def load_spe(filepath):
                 # Collect data (file_parser uses int, not float)
                 if IS_DATA:
                     try:
-                        counts.append(int(line))  # Changed from float to int
+                        counts.append(int(line))
                     except Exception:
                         continue
 
@@ -67,7 +66,7 @@ def load_spe(filepath):
             'real_time': metadata['real_time'],
         }
 
-    # ASCII format - .spe files (NaI/BGO) - KEEP YOUR EXISTING CODE
+    # ASCII format - .spe files (NaI/BGO)
     with open(filepath, 'r') as f:
         lines = f.readlines()
 
@@ -121,7 +120,9 @@ PEAK FITTING
 """
 
 def subtract_background(signal_data, background_data):
-    """Subtract background spectrum from signal spectrum"""
+    """
+    Subtract background spectrum from signal spectrum
+    """
     signal_counts = signal_data['counts'].copy()
     background_counts = background_data['counts']
 
@@ -146,15 +147,21 @@ def subtract_background(signal_data, background_data):
 
 
 def gaussian(x, A, mu, sigma):
-    """Gaussian function"""
+    """
+    Gaussian function
+    """
     return A * np.exp(-(x - mu) ** 2 / (2 * sigma ** 2))
 
 def gaussian_with_background(x, A, mu, sigma,bg):
-    """Gaussian with background"""
+    """
+    Gaussian with background
+    """
     return gaussian(x, A, mu, sigma) + bg
 
 def fit_peak(channels, counts, peak_channel, window=50):
-    """Fit Gaussian to a peak"""
+    """
+    Fit Gaussian to a peak
+    """
     center_idx = np.argmin(np.abs(channels - peak_channel))
     start = max(0, center_idx - window)
     end = min(len(channels), center_idx + window)
@@ -167,7 +174,7 @@ def fit_peak(channels, counts, peak_channel, window=50):
 
     # ADAPTIVE SIGMA GUESS - scales with peak position
     # For channels: ~5, for energy (keV): ~peak_energy/100
-    sigma_guess = max(5.0, mu_guess / 100)  # ← FIX HERE
+    sigma_guess = max(5.0, mu_guess / 100)
 
     bg_guess = np.min(region_counts)
 
@@ -199,6 +206,9 @@ def fit_peak(channels, counts, peak_channel, window=50):
 CALIBRATION
 """
 def calibrate(yaml_file):
+    """
+    fits channels to energy
+    """
     with open(yaml_file) as f:
         content = f.read()
     peak_dict = yaml.safe_load(content)
@@ -230,10 +240,15 @@ def calibrate(yaml_file):
 
 
 def energy_calibration_equation(c1, channel, c0):
+    """
+    energy calib equation
+    """
     return c1 * channel + c0
 
 def propagate_energy_uncertainty(channel, channel_err, m, b, m_err, b_err):
-    """Propagate uncertainty from channel to energy"""
+    """
+    Propagate uncertainty from channel to energy
+    """
     energy_err = np.sqrt(
         (m * channel_err) ** 2 +
         (channel * m_err) ** 2 +
@@ -244,7 +259,9 @@ def propagate_energy_uncertainty(channel, channel_err, m, b, m_err, b_err):
 PLOT FUNCTIONS
 """
 def plot_spectrum_with_fit(data, title, peak_channel, window=50):
-    """Plot spectrum with Gaussian fit"""
+    """
+    Plot spectrum with Gaussian fit
+    """
     fit_result = fit_peak(data['channels'], data['counts'], peak_channel, window)
     plt.figure(figsize=(12, 7))
 
@@ -266,7 +283,9 @@ def plot_spectrum_with_fit(data, title, peak_channel, window=50):
 
 
 def plot_spectrum_with_fit_energy(energy, y, title, peak_channel, window=50):
-    """Plot spectrum with Gaussian fit"""
+    """
+    Plot spectrum with Gaussian fit
+    """
     fit_result = fit_peak(energy, y, peak_channel, window)
     plt.figure(figsize=(12, 7))
 
@@ -296,14 +315,17 @@ def plot_calibration(x, y, coeffs):
     plt.title('Energy vs Channel')
     plt.legend()
     plt.show()
+
 """
-SOURCE ACTIVITY
+SOURCE ACTIVITY AND RESOLUTION
 """
 
 def calc_half_life(nuclide, elap_time=45.88, 
                    isotope_file='efficiency_files/isotope_data(1).yaml',
                    activity_file='efficiency_files/set1184_downstairs(1).dat'):
-    
+    """
+    calculate half-life 
+    """
     with open(isotope_file, 'r') as f:
         content = f.read()
     isotopes = [yaml.safe_load('Isotope:' + section) 
@@ -341,7 +363,7 @@ def calc_half_life(nuclide, elap_time=45.88,
     curie_amt_err = nuclide_activity_uncert[nuclide] *(1/2)**(elap_time/reversed_half_life[nuclide])
     photon_amt_err = curie_amt_err * 37000
     
-    print(f'--- {nuclide} ACTIVITY AND HALFLIFE ---')
+    print(f'\n--- {nuclide} ACTIVITY AND HALFLIFE ---')
     print(f'{curie_amt:.2f} is the current activity in uCi')
     print(f'{photon_amt:.2f} is the photons per second given the activity')
     print(f'Photon emission uncertainty: ±{photon_amt_err:.2f} photons/s')
@@ -351,24 +373,10 @@ def calc_half_life(nuclide, elap_time=45.88,
 
 
 
-"""
-ENERGY RESOLUTION
-"""
 
 def calculate_resolution(isotope_names, fits, energy_fits, m, b, known_energies, use_channel_conversion=None):
     """
     Calculate energy resolution for multiple isotopes
-
-    Args:
-        isotope_names: list of isotope names
-        fits: list of channel-space fit results
-        energy_fits: list of energy-space fit results
-        m, b: calibration parameters
-        known_energies: list of known energies for each isotope
-        use_channel_conversion: list of isotope names to use channel conversion (e.g., ['CO60'])
-
-    Returns:
-        list of dicts with FWHM_energy, resolution, energy
     """
     if use_channel_conversion is None:
         use_channel_conversion = []
@@ -380,7 +388,7 @@ def calculate_resolution(isotope_names, fits, energy_fits, m, b, known_energies,
             # Use channel-space fit (more reliable for noisy peaks)
             FWHM_energy = m * fits[i]['FWHM']
             fitted_energy = m * fits[i]['mu'] + b
-            print(f"  {name}: Using channel-space conversion")
+            print(f"  {name}: Using channel conversion")
         else:
             # Use energy-space fit
             FWHM_energy = energy_fits[i]['FWHM']
@@ -402,10 +410,6 @@ def calculate_resolution(isotope_names, fits, energy_fits, m, b, known_energies,
 def plot_resolution_vs_energy(resolutions, detector_name):
     """
     Plot energy resolution as a function of energy
-
-    Args:
-        resolutions: list of dicts with 'energy', 'resolution', and optionally 'resolution_err'
-        detector_name: name of detector
     """
     energies = [r['energy'] for r in resolutions]
     resolution_vals = [r['resolution'] for r in resolutions]
@@ -433,14 +437,7 @@ def plot_resolution_vs_energy(resolutions, detector_name):
 
 def fit_resolution_curve(resolutions):
     """
-    Fit the resolution curve: R² = aE⁻² + bE⁻¹ + c
-    Plots on both linear and logarithmic scales
-
-    Args:
-        resolutions: list of dicts with 'energy' and 'resolution'
-
-    Returns:
-        fitted parameters a, b, c, errors
+    Fit the resolution curve
     """
     energies = np.array([r['energy'] for r in resolutions])
     resolution_vals = np.array([r['resolution'] for r in resolutions])
@@ -456,9 +453,6 @@ def fit_resolution_curve(resolutions):
     a, b, c = popt
     errors = np.sqrt(np.diag(pcov))
 
-    # print("\n=== Resolution Curve Fit ===")
-    # print(f"R² = {a:.6f}/E² + {b:.6f}/E + {c:.6f}")
-    # print(f"Uncertainties: a={errors[0]:.6f}, b={errors[1]:.6f}, c={errors[2]:.6f}")
 
     # Generate fit curve (use logspace for smooth log plot)
     E_fit = np.logspace(np.log10(min(energies)), np.log10(max(energies)), 100)
@@ -491,8 +485,15 @@ def fit_resolution_curve(resolutions):
 
     return a, b, c, errors
 
-def intrinsic(activity,activity_err,diameter,distance):
 
+"""
+Efficiency Functions
+"""
+
+def intrinsic(activity,activity_err,diameter,distance):
+    """
+    calculate intrinsic count rate
+    """
     intrinsic_rate = activity * (np.pi*(diameter/2)**2)/(4*np.pi*distance**2)
     intrinsic_rate_err = activity_err * (np.pi*(diameter/2)**2)/(4*np.pi*distance**2)
     
@@ -503,33 +504,39 @@ def intrinsic(activity,activity_err,diameter,distance):
 def efficiency_uncertainty(nuclide, peak_counts,peak_counts_err, time,
                           emitted_counts, emitted_counts_err,
                           incident_counts, incident_counts_err):
-
-    #idx = np.argmin(np.abs(energy - peak_energy))
+    """
+    calculate absolute and intrinsic efficiencies with errors
+    """
+    
 
 # Get the counts at that peak
-    #peak_counts = counts[idx]
-    # Count rate and its uncertainty
     count_rate = peak_counts / time
     count_rate_err = peak_counts_err / time
 
 
-    # Absolute efficiency error: σ(ε_abs) = ε_abs * sqrt((σ_rate/rate)^2 + (σ_emitted/emitted)^2)
+    # Absolute efficiency error
     abs_eff = count_rate / emitted_counts
     abs_eff_err = abs_eff * np.sqrt(
         (count_rate_err / count_rate)**2 +
         (emitted_counts_err / emitted_counts)**2
     )
-    # Intrinsic efficiency error: σ(ε_int) = ε_int * sqrt((σ_rate/rate)^2 + (σ_incident/incident)^2)
+    # Intrinsic efficiency error
     int_eff = count_rate / incident_counts
     int_eff_err = int_eff * np.sqrt(
         (count_rate_err / count_rate)**2 +
         (incident_counts_err / incident_counts)**2
     )
-    print(f'The Absolute Efficiency of {nuclide} is {100*abs_eff:.4f}±{abs_eff_err*100:.4f}%')
+    print(f'\nThe Absolute Efficiency of {nuclide} is {100*abs_eff:.4f}±{abs_eff_err*100:.4f}%')
     print(f'The Intrinsic Efficiency of {nuclide} is {100*int_eff:.4f}±{int_eff_err*100:.4f}%')
     return abs_eff, int_eff, abs_eff_err, int_eff_err
 
+
+
 def fit_intrinsic_efficiency(energies, intrinsic_efficiencies, degree=1):
+    """
+    Fit intrinsic efficiency to model
+    """
+    
     # Convert to numpy arrays
     energies = np.array(energies)
     intrinsic_efficiencies = np.array(intrinsic_efficiencies)
@@ -538,13 +545,14 @@ def fit_intrinsic_efficiency(energies, intrinsic_efficiencies, degree=1):
     log_E = np.log(energies)
     log_eff = np.log(intrinsic_efficiencies)
 
-    # Calculate weights if errors are provided
     
     coeffs, pcov = np.polyfit(log_E, log_eff, degree, cov=True)
 
     # Create fit function
     def fit_func(E):
-        """Evaluate fitted efficiency at energy E (in keV)"""
+        """
+        Evaluate fitted efficiency at energy E (in keV)
+        """
         ln_E = np.log(E)
         ln_eff = np.polyval(coeffs, ln_E)
         return np.exp(ln_eff)
@@ -563,11 +571,14 @@ def fit_intrinsic_efficiency(energies, intrinsic_efficiencies, degree=1):
         'log_E': log_E,
         'log_eff': log_eff,
         'fit_func': fit_func
+
     }
 
 def plot_intrinsic_efficiency(energies, intrinsic_efficiencies, intrinsic_eff_errors=None,
                                fit_result=None, title='Intrinsic Peak Efficiency vs Energy'):
-    
+    """
+    Plot intrinsic efficiency versus energy in log scale
+    """
     fig, ax = plt.subplots(figsize=(10, 7))
 
     # Plot data points
@@ -587,7 +598,7 @@ def plot_intrinsic_efficiency(energies, intrinsic_efficiencies, intrinsic_eff_er
     ax.set_xscale('log')
     ax.set_yscale('log')
 
-    # Labels and formatting
+    
     ax.set_xlabel('Energy (keV)', fontsize=13)
     ax.set_ylabel('Intrinsic Peak Efficiency', fontsize=13)
     ax.set_title(title, fontsize=15, fontweight='bold')
@@ -602,7 +613,9 @@ Off-Axis Response
 """
 def fit_off_axis_response(base_path, isotope_prefix, background_data, peak_channel,
                          window=50, on_axis_file=None):
-
+    """
+    Fit peaks of off axis spectra
+    """
     # Get files - check for both .Spe and .mca extensions
     files = glob.glob(f"{base_path}/{isotope_prefix}*.Spe")
     files += glob.glob(f"{base_path}/{isotope_prefix}*.mca")
@@ -610,20 +623,20 @@ def fit_off_axis_response(base_path, isotope_prefix, background_data, peak_chann
     # Parse angles
     angle_list = []
     for f in files:
-        filename = f.split('/')[-1]  # Get just the filename
+        filename = f.split('/')[-1]  
         # Remove prefix and extension (.Spe or .mca) to get angle string
         angle_str = filename.replace(isotope_prefix, '').replace('.Spe', '').replace('.mca', '')
-        angle = int(angle_str)  # Negative sign is already in the string
+        angle = int(angle_str) 
         angle_list.append((angle, f))
 
     angle_list.sort()
 
-    # Fit peaks
+    
     angles = []
     amplitudes = []
     errors = []
 
-    # Add on-axis measurement if provided
+    # Add on-axis measurement
     if on_axis_file:
         data = load_spe(on_axis_file)
         data_no_bg = subtract_background(data, background_data)
@@ -648,7 +661,7 @@ def fit_off_axis_response(base_path, isotope_prefix, background_data, peak_chann
             fit_result = fit_peak(data_no_bg['channels'], data_no_bg['counts'],
                                  peak_channel, window)
 
-            # Normalize to counts per second using live_time
+            # convert to counts per second using live_time
             time = data_no_bg['real_time']
             count_rate = fit_result['A'] / time
             count_rate_err = fit_result['amp_err'] / time
@@ -671,18 +684,9 @@ def fit_off_axis_response(base_path, isotope_prefix, background_data, peak_chann
 def plot_off_axis_response(angular_data, isotope_name, energy_kev):
     """
     Plot peak amplitude vs angle
-
-    Parameters:
-    -----------
-    angular_data : dict
-        Output from fit_angular_response() with 'angles', 'amplitudes', 'errors'
-    isotope_name : str
-        Name for plot label (e.g., 'Cs-137')
-    energy_kev : float
-        Energy in keV for plot label
     """
     fig, ax = plt.subplots(figsize=(10, 6))
-
+    #add error bars
     ax.errorbar(list(map(float, angular_data['angles'])), angular_data['amplitudes'],
                 yerr=angular_data['errors'],
                 fmt='o-', capsize=5, markersize=8, linewidth=2)
@@ -697,7 +701,9 @@ def plot_off_axis_response(angular_data, isotope_name, energy_kev):
 
 def fit_off_axis_response_FWHM(base_path, isotope_prefix, background_data, peak_channel,
                          window=50, on_axis_file=None):
-
+    """
+    Fit FWHMs of off axis spectra
+    """
     # Get files - check for both .Spe and .mca extensions
     files = glob.glob(f"{base_path}/{isotope_prefix}*.Spe")
     files += glob.glob(f"{base_path}/{isotope_prefix}*.mca")
@@ -705,20 +711,20 @@ def fit_off_axis_response_FWHM(base_path, isotope_prefix, background_data, peak_
     # Parse angles
     angle_list = []
     for f in files:
-        filename = f.split('/')[-1]  # Get just the filename
+        filename = f.split('/')[-1]  
         # Remove prefix and extension (.Spe or .mca) to get angle string
         angle_str = filename.replace(isotope_prefix, '').replace('.Spe', '').replace('.mca', '')
-        angle = int(angle_str)  # Negative sign is already in the string
+        angle = int(angle_str)  
         angle_list.append((angle, f))
 
     angle_list.sort()
 
-    # Fit peaks
+    
     angles = []
     FWHMs = []
     errors = []
 
-    # Add on-axis measurement if provided
+    # Add on-axis measurement
     if on_axis_file:
         data = load_spe(on_axis_file)
         data_no_bg = subtract_background(data, background_data)
@@ -743,7 +749,7 @@ def fit_off_axis_response_FWHM(base_path, isotope_prefix, background_data, peak_
             fit_result = fit_peak(data_no_bg['channels'], data_no_bg['counts'],
                                  peak_channel, window)
 
-            # Normalize to counts per second using live_time
+            # change to counts per second using live_time
             time = data_no_bg['real_time']
             FWHM = fit_result['FWHM']
             FWHM_err = fit_result['FWHM_err']
@@ -759,25 +765,16 @@ def fit_off_axis_response_FWHM(base_path, isotope_prefix, background_data, peak_
     angles = [x[0] for x in sorted_data]
     FWHMs = [x[1] for x in sorted_data]
     errors = [x[2] for x in sorted_data]
-    
+
     return {'angles': angles, 'FWHMs': FWHMs, 'errors': errors}
 
 
 def plot_off_axis_response_FWHM(angular_data, isotope_name, energy_kev):
     """
-    Plot peak amplitude vs angle
-
-    Parameters:
-    -----------
-    angular_data : dict
-        Output from fit_angular_response() with 'angles', 'amplitudes', 'errors'
-    isotope_name : str
-        Name for plot label (e.g., 'Cs-137')
-    energy_kev : float
-        Energy in keV for plot label
+    Plot FWHM vs angle
     """
     fig, ax = plt.subplots(figsize=(10, 6))
-
+    #add error bars
     ax.errorbar(list(map(float, angular_data['angles'])), angular_data['FWHMs'],
                 yerr=angular_data['errors'],
                 fmt='o-', capsize=5, markersize=8, linewidth=2)
