@@ -1,129 +1,158 @@
-## Overview
+# Gamma Ray Detector Lab
 
-This laboratory involves calibrating and characterizing space radiation detectors to analyze and compare their performance for different missions. You will develop scripts, analyze spectral data, and report your findings. The project is highly focused on collaborative data analysis pipelines and reproducible scientific reporting.
+> **A Python project for characterizing gamma-ray detectors in high-energy astrophysics**
 
-***
+This project analyzes the performance of three detector types used in space based gamma-ray astronomy missions:
+- **NAITI** (Thallium-doped Sodium Iodide) - Scintillator detector
+- **BGO** (Bismuth Germanate) - Scintillator detector  
+- **CdTe** (Cadmium Telluride) - Solid-state detector
 
-## Primary Goals
+Built for the **Space Detector Laboratory** course, it provides a complete analysis pipeline for energy calibration and resolution, efficiency measurements, and off angle testing.
 
-- **Write a min 5-page brief** comparing your results to others.
-- **Discuss** which detectors are suitable for each type of mission.
+---
+## Features
 
-***
+#### **Data Loading & Preprocessing**
+- Load spectral data from `.Spe` (NAITI/BGO) and `.mca` (CDTE) files
+- Extract metadata (live time, real time, detector info)
+- Background subtraction
 
-## Experimental Tasks
+#### **Peak Fitting & Identification**
+- Gaussian peak fitting with background subtraction
+- Full uncertainty propagation
 
-### 1. Energy Calibration
+#### **Energy Calibration**
+- Calibration (channel → energy conversion)
+- Linear calibration: E = c1 × channel + c0
+- Validation and sorting of calibration points
+- YAML-based configuration for detector specific calibrations
 
-- Write code to calibrate each detector, relating the digital channel number to absolute energy:
-$$
-E = c_1 \times \text{channel} + c_0
-$$
-- Test the linearity of this calibration curve and, if needed, fit higher-order terms.
+#### **Energy Resolution**
+- Re-fit peaks in calibrated energy space
+- Energy resolution calculation: R = FWHM / E × 100%
+- Resolution curve fitting: R² = aE⁻² + bE⁻¹ + c
+- Both linear and log visualization
 
-### 2. Source Activity
+#### **Source Activity & Half-Life**
+- Calculate current source activity from calibration date
+- Account for radioactive decay over elapsed time
+- Uncertainty propagation for activity measurements
+- Support for Cs-137, Co-60, Am-241, Ba-133
 
-- Determine the activities of laboratory sources based on their measured activity at a fixed date. Use half-lives for decay corrections.
-- Note which sources you are using and their corresponding measurement dates.
+#### **Efficiency Analysis**
+- **Intrinsic efficiency**: Fraction of incident photons detected
+- **Absolute efficiency**: Fraction of emitted photons detected
+- Logarithmic polynomial fitting for intrinsinc efficiency: ln ε = a + b ln E + c(ln E)²
+- Full error propagation through all calculations
 
-### 3. Energy Resolution
+#### **Angular Response**
+- Off-axis response characterization (peak amplitude vs angle)
+- FWHM variation with detector angle
 
-- Calculate the energy resolution $$ R $$ at each energy:
-  $$
-  R = \frac{\delta E}{E}
-  $$
-  where $$ \delta E $$ is the FWHM of the peak.
-- Fit resolution as a function of energy using:
-  $$
-  R^2 = \left(\frac{\delta E}{E}\right)^2 = aE^{-2} + bE^{-1} + c
-  $$
-  or express using logarithmically scaled axes for clarity.
+*Note: Co-60 excluded from CdTe analysis due to low detection efficiency at high energies*
 
-### 4. Detector Efficiency
+### Outputs & Visualizations
 
-- Compute **absolute efficiency**:
-  $$
-  \epsilon = \frac{\text{count rate}}{\text{source activity}}
-  $$
-- Compute **intrinsic efficiency**:
-  $$
-  \epsilon = \frac{\text{count rate}}{\text{rate that photon passes through the detector}}
-  $$
-- Fit intrinsic efficiency (log-log axes recommended):
-  $$
-  \ln \epsilon_p = a + b \ln E + c (\ln E)^2
-  $$
+1. **Gaussian Fit (Channel)** - Raw spectrum with fitted peaks
+2. **Energy Calibration Curve** - Channel vs Energy
+3. **Gaussian Fit (Energy)** - Calibrated spectrum with fitted peaks
+4. **Energy Resolution vs Energy** - Linear scale
+5. **Energy Resolution vs Energy** - Log scale with fitted curve
+6. **Intrinsic Peak Efficiency vs Energy** - Log with polynomial fit
+7. **Angular Response (Peak Amplitude)** - Count rate vs angle
+8. **Angular Response (FWHM)** - Peak width vs angle
 
-### 5. Off-Axis Response
+---
 
-- Measure the detector response as a function of the source angle.
-- Collect and analyze spectra at multiple angles, plot (e.g., FWHM vs. angle).
+## Setup
 
-***
+1. **Download the repository:**
+   - Click the green **"Code"** button on GitHub
+   - Select **"Download ZIP"**
+   - Extract the ZIP file to your desired location
 
-## Data Analysis Pipeline
 
-### General Guidelines
+2. **Install required libraries:**
+```
+pip install numpy scipy matplotlib yaml pandas glob
+```
 
-- Build modular Python scripts for each analysis step (e.g., calibration, resolution, efficiency).
-- Use separate files/functions, e.g. `calibration.py`, `resolution.py`.
-- Prefer argument parsing (e.g., Python’s `argparse`) for workflow flexibility:
-  ```
-  python pipeline.py --detector BGO --calibrate
-  ```
-- Avoid absolute paths in your code; use relative paths with Python modules like `os` or `pathlib`.
+3. **Navigate to the project directory:**
+```
+cd path/to/High-Energy-Detectors-josh2ari
+```
 
-### Required Codes (For Each Detector)
+4. **Run main program:**
+```
+python main.py
+```
+5. **Run analysis for the desired detector after running main**
+```
+GAMMA-RAY DETECTOR ANALYSIS
 
-- Calibration curve (channel ↔ energy/wavelength)
-- Energy resolution vs. energy (plot FWHM of photo-peaks)
-- Absolute and intrinsic efficiencies vs. energy (with plots)
-- Off-axis response: change in FWHM/peak as a function of angle
+Select a detector to analyze:
 
-Ensure all scripts work as a single, integrated pipeline.
+  1. NAITI(Thallium-doped Sodium Iodide)
+  2. BGO (Bismuth Germanate)
+  3. CdTe (Cadmium Telluride)
+  4. Exit
 
-***
+Enter your choice (1-4): 1
+```
 
-## Data Collection
+---
 
-- Collect data from specified detectors in groups.
-- Maintain clear records, consistent naming conventions, and document all procedures.
-- Save spectra as `.mca` or `.Spe` files (plain text).
+## Project Structure
+```
+High-Energy-Detectors-josh2ari/
+├── Foreigners/                      # Data for all detectors
+│   ├── BGO/                      
+│   │   ├── AM_aligned.Spe
+│   │   ├── BA_aligned.Spe
+│   │   ├── CO60_aligned.Spe
+│   │   ├── CS137_aligned.Spe
+│   │   ├── BACKGROUND.Spe
+│   │   ├── BGO.yaml                # Calibration config
+│   │   ├── Am_offaxis/             # off-axis angle data
+│   │   └── Cs_offaxis/
+│   ├── CDTE/                      
+│   │   ├── AM_aligned.mca
+│   │   ├── BA_aligned.mca
+│   │   ├── CS137_aligned.mca
+│   │   ├── BACKGROUND.mca
+│   │   ├── CDTE.yaml
+│   │   └── Ba_offaxis/
+│   └── NaITI/                      # Same structure as BGO
+├── efficiency_files/               
+│   ├── isotope_data(1).yaml        
+│   └── set1184_downstairs(1).dat   
+├── high_detectors_functions.py     
+├── BGO.py                          
+├── CDTE.py                         
+├── NAITI.py
+├── main.py                         #File that runs the project             
+└── README.md                      
+```
+---
 
-***
+## Results & Analysis
 
-## Data Extraction and Processing
+All detailed results, plots,and comparisons are documented in individual reports as part of the assessment.
 
-- Use Python scripts to import spectral data, fit peaks, perform background subtraction, and extract relevant parameters (energy, FWHM, count rate).
-- Fit Gaussian or compound models to spectral peaks:
-  $$
-  f(x; \mu, \sigma^2, A) = \frac{A}{\sigma \sqrt{2\pi}} \, \exp\left(-\frac{(x-\mu)^2}{2\sigma^2}\right)
-  $$
-- Report uncertainties and propagate errors in all results.
+Each team member has written a comprehensive report which contains the implementation and results.
+This repository contains the analysis code and data pipeline used to generate those results.
 
-***
+---
 
-## Comparing Results
+## Authors
 
-- After analysis, compare your group’s results to those of other groups.
-- Produce summary plots (e.g., energy resolution vs. energy) combining all data.
-- Comment on similarities, differences, strengths, weaknesses, and mission suitability for each detector.
+- **Joshua Rodriguez**
+- **Ari Miller**
+- **Javier Ayuso**
 
-***
+## Acknowledgments
 
-## Reporting & Submission
-
-- **Final report**: Concise, contains discussion, code, and comparison.
-- Include code and analysis pipeline (ideally via GitHub).
-- Discuss which detectors are best suited for specific mission types and why.
-
-***
-
-## Collaboration and Best Practices
-
-- Use version control and shared repositories.
-- Agreement on directory structure and file naming is essential.
-- Communicate regularly to avoid missing or duplicated data.
-
-***
-
+- **Space Detector Laboratory** professors Andrew and Morgan, for guidance and laboratory resources
+- Team members for collaborative data collection and analysis
+- Claude (Anthropic) for assistance with certain debugging, and for energy resolution, efficiency and off-axis 
+  clarification and functions example usage
